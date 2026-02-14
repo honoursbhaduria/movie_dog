@@ -1,0 +1,450 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap");
+
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #030014;
+
+  --color-light-100: #cecefb;
+  --color-light-200: #a8b5db;
+
+  --color-gray-100: #9ca4ab;
+
+  --color-dark-100: #0f0d23;
+
+  --font-dm-sans: DM Sans, sans-serif;
+
+  --breakpoint-xs: 480px;
+
+  --background-image-hero-pattern: url("/hero-bg.png");
+}
+
+@layer base {
+  body {
+    font-family: "DM Sans", serif;
+    font-optical-sizing: auto;
+    background: #030014;
+  }
+
+  h1 {
+    @apply mx-auto max-w-4xl text-center text-5xl font-bold leading-tight tracking-[-1%] text-white sm:text-[64px] sm:leading-[76px];
+  }
+
+  h2 {
+    @apply text-2xl font-bold text-white sm:text-3xl;
+  }
+
+  main {
+    @apply min-h-screen relative bg-primary;
+  }
+
+  header {
+    @apply sm:mt-10 mt-5;
+    position: relative;
+  }
+
+  .header-actions {
+    @apply flex justify-end mb-4;
+  }
+
+  .wishlist-btn {
+    @apply bg-light-100/10 hover:bg-light-100/20 text-white font-semibold py-2 px-6 rounded-lg transition-all flex items-center gap-2;
+  }
+
+  header img {
+    @apply w-full max-w-lg h-auto object-contain mx-auto drop-shadow-md;
+  }
+}
+
+@layer components {
+  .pattern {
+    @apply bg-hero-pattern w-full h-screen bg-center bg-cover absolute z-0;
+  }
+
+  .wrapper {
+    @apply px-5 py-12 xs:p-10 max-w-7xl mx-auto flex flex-col relative z-10;
+  }
+
+  .trending {
+    @apply mt-20;
+
+    & ul {
+      @apply flex flex-row overflow-y-auto gap-5 -mt-10 w-full hide-scrollbar;
+    }
+
+    & ul li {
+      @apply min-w-[230px] flex flex-row items-center;
+    }
+
+    & ul li p {
+      @apply fancy-text mt-[22px] text-nowrap;
+    }
+
+    & ul li img {
+      @apply w-[127px] h-[163px] rounded-lg object-cover -ml-3.5;
+    }
+  }
+
+  .search {
+    @apply w-full bg-light-100/5 px-4 py-3 rounded-lg mt-10 max-w-3xl mx-auto;
+
+    & div {
+      @apply relative flex items-center;
+    }
+
+    & img {
+      @apply absolute left-2 h-5 w-5;
+    }
+
+    & input {
+      @apply w-full bg-transparent py-2 sm:pr-10 pl-10 text-base text-gray-200 placeholder-light-200 outline-hidden;
+    }
+  }
+
+  .all-movies {
+    @apply space-y-9;
+
+    & ul {
+      @apply grid grid-cols-1 gap-5 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4;
+    }
+  }
+
+  .movie-card {
+    @apply bg-dark-100 p-4 rounded-xl shadow-sm;
+
+    cursor: pointer;
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+
+    &:hover {
+      transform: translateY(-6px);
+      /* subtle uplift without heavy shadow */
+      box-shadow: 0 8px 20px rgba(0,0,0,0.35);
+    }
+
+    & img {
+      @apply rounded-lg h-auto w-full;
+    }
+
+    & h3 {
+      @apply text-white font-bold text-base line-clamp-1;
+    }
+
+    & .content {
+      @apply mt-2 flex flex-row items-center flex-wrap gap-2;
+    }
+
+    & .rating {
+      @apply flex flex-row items-center gap-1;
+    }
+
+    & .rating img {
+      @apply size-4 object-contain;
+    }
+
+    & .rating p {
+      @apply font-bold text-base text-white;
+    }
+
+    & .content span {
+      @apply text-sm text-gray-100;
+    }
+
+    & .content .lang {
+      @apply capitalize text-gray-100 font-medium text-base;
+    }
+
+    & .content .year {
+      @apply text-gray-100 font-medium text-base;
+    }
+  }
+
+  .load-more-btn {
+    @apply bg-light-100/10 hover:bg-light-100/20 text-white font-bold py-3 px-8 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .modal-backdrop {
+    @apply fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4;
+    backdrop-filter: blur(4px);
+    animation: fadeIn 0.2s ease;
+  }
+
+  .modal-content {
+    @apply bg-dark-100 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto relative;
+    animation: slideUp 0.3s ease;
+  }
+
+  .modal-close {
+    @apply absolute top-4 right-4 text-white text-4xl w-10 h-10 flex items-center justify-center bg-light-100/10 rounded-full hover:bg-light-100/20 transition-all z-10;
+  }
+
+  .wishlist-toggle-btn {
+    @apply absolute top-4 left-4 text-white text-sm font-semibold px-4 py-2 flex items-center justify-center bg-light-100/10 rounded-lg hover:bg-light-100/20 transition-all z-10;
+    
+    &.in-wishlist {
+      @apply bg-red-500/20 hover:bg-red-500/30;
+    }
+  }
+
+  .modal-body {
+    @apply text-white;
+  }
+
+  .modal-header {
+    @apply relative;
+  }
+
+  .modal-backdrop-img {
+    @apply w-full h-64 object-cover rounded-t-2xl;
+  }
+
+  .modal-header-content {
+    @apply p-6;
+    background: linear-gradient(to top, #0f0d23, transparent);
+  }
+
+  .modal-header h2 {
+    @apply text-3xl font-bold mb-2;
+  }
+
+  .tagline {
+    @apply text-light-200 italic text-lg mb-4;
+  }
+
+  .modal-meta {
+    @apply flex items-center gap-3 text-gray-200 mb-4;
+
+    .rating {
+      @apply flex items-center gap-1;
+      
+      img {
+        @apply w-5 h-5;
+      }
+
+      span {
+        @apply text-white font-bold;
+      }
+    }
+  }
+
+  .genres {
+    @apply flex flex-wrap gap-2;
+  }
+
+  .genre-tag {
+    @apply bg-light-100/10 px-3 py-1 rounded-full text-sm text-light-100;
+  }
+
+  .modal-sections {
+    @apply p-6 space-y-6;
+
+    h3 {
+      @apply text-xl font-bold mb-3;
+    }
+
+    .overview {
+      @apply text-gray-200 leading-relaxed;
+    }
+  }
+
+  .trailer-container {
+    @apply relative w-full pt-[56.25%] bg-black rounded-lg overflow-hidden;
+
+    iframe {
+      @apply absolute top-0 left-0 w-full h-full;
+    }
+  }
+
+  .cast-grid {
+    @apply grid grid-cols-2 xs:grid-cols-3 md:grid-cols-6 gap-4;
+  }
+
+  .cast-member {
+    @apply text-center;
+
+    img, .no-image {
+      @apply w-full h-28 object-cover rounded-lg mb-2;
+    }
+
+    .no-image {
+      @apply bg-dark-100 flex items-center justify-center text-gray-100 text-xs;
+    }
+
+    .actor-name {
+      @apply text-sm font-semibold text-white;
+    }
+
+    .character-name {
+      @apply text-xs text-gray-200 mt-1;
+    }
+  }
+
+  .additional-info {
+    @apply grid grid-cols-2 md:grid-cols-4 gap-4 bg-light-100/5 p-4 rounded-lg;
+
+    h4 {
+      @apply text-sm text-gray-200 mb-1;
+    }
+
+    p {
+      @apply text-base font-semibold text-white;
+    }
+  }
+
+  .best-deal-banner {
+    @apply bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/30 rounded-lg p-4 mb-6;
+
+    .best-deal-badge {
+      @apply inline-block bg-yellow-500/20 text-yellow-300 text-xs font-bold px-3 py-1 rounded-full mb-3;
+    }
+
+    .best-deal-content {
+      @apply flex items-center gap-4;
+    }
+
+    .best-deal-logo {
+      @apply w-16 h-16 rounded-lg object-cover;
+    }
+
+    .best-deal-name {
+      @apply text-white font-bold text-lg;
+    }
+
+    .best-deal-type {
+      @apply text-sm text-gray-200 mt-1;
+    }
+  }
+
+
+  .wishlist-modal {
+    @apply max-w-6xl;
+  }
+
+  /* Ensure wishlist modal has breathing room so header/title isn't overlapped by absolute buttons */
+  .wishlist-modal .modal-body {
+    @apply p-6;
+  }
+
+  .wishlist-title {
+    @apply text-3xl font-bold text-white mb-2;
+  }
+
+  .wishlist-grid {
+    @apply grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5;
+  }
+
+  .wishlist-item {
+    @apply relative;
+  }
+
+  .remove-wishlist-btn {
+    @apply mt-3 w-auto px-4 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 font-semibold rounded-md transition-all text-sm;
+    display: inline-block;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .empty-wishlist {
+    @apply text-center py-20 text-gray-200;
+    
+    p:first-child {
+      @apply text-2xl font-semibold text-white mb-2;
+    }
+  }
+  .providers-grid {
+    @apply flex flex-wrap gap-4;
+  }
+
+  .provider-card-wrapper {
+    @apply relative;
+  }
+
+  .provider-card {
+    @apply flex flex-col items-center gap-2 bg-light-100/5 p-3 rounded-lg hover:bg-light-100/10 transition-all cursor-pointer relative;
+    text-decoration: none;
+
+    &.user-platform {
+      @apply border-2 border-green-500/50;
+    }
+
+    .user-platform-badge {
+      @apply absolute top-1 left-1 bg-green-500 text-white text-xs w-5 h-5 flex items-center justify-center rounded-full font-bold;
+    }
+
+    img {
+      @apply w-16 h-16 rounded-lg object-cover;
+    }
+
+    span {
+      @apply text-xs text-gray-200 text-center max-w-[80px];
+    }
+
+    .free-badge, .rent-badge, .buy-badge {
+      @apply text-[10px] font-semibold px-2 py-0.5 rounded-full mt-1;
+    }
+
+    .free-badge {
+      @apply bg-green-500/20 text-green-300;
+    }
+
+    .rent-badge {
+      @apply bg-blue-500/20 text-blue-300;
+    }
+
+    .buy-badge {
+      @apply bg-purple-500/20 text-purple-300;
+    }
+
+    &:hover span {
+      @apply text-white;
+    }
+  }
+
+  .platform-preference-btn {
+    @apply absolute top-1 right-1 text-sm bg-dark-100/80 hover:bg-dark-100 rounded-full w-7 h-7 flex items-center justify-center transition-all;
+    text-decoration: none;
+  }
+
+  .provider-note {
+    @apply text-xs text-gray-200 mt-4 italic;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideUp {
+    from {
+      transform: translateY(20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+}
+
+@utility text-gradient {
+  @apply bg-linear-to-r from-[#D6C7FF] to-[#AB8BFF] bg-clip-text text-transparent;
+}
+
+@utility fancy-text {
+  -webkit-text-stroke: 5px rgba(206, 206, 251, 0.5);
+  font-size: 190px;
+  font-family: "Bebas Neue", sans-serif;
+}
+
+@utility hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
