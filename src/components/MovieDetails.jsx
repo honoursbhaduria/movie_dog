@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
-import { 
-  addToWishlist, 
-  removeFromWishlist, 
+import {
+  addToWishlist,
+  removeFromWishlist,
   isInWishlist,
   getPlatformPreferences,
   togglePlatformPreference,
-  hasPlatformPreference 
+  hasPlatformPreference
 } from '../utils/wishlist'
 
 const API_BASE_URL = 'https://api.themoviedb.org/3';
@@ -30,14 +30,14 @@ const MovieDetails = ({ movieId, onClose }) => {
 
   useEffect(() => {
     if (movieId) {
-      setInWishlist(isInWishlist(movieId));
+      isInWishlist(movieId).then(val => setInWishlist(val));
       setUserPlatforms(getPlatformPreferences());
     }
 
     const fetchMovieDetails = async () => {
       try {
         setIsLoading(true);
-        
+
         // Fetch movie details, credits, and videos in parallel
         const [detailsRes, creditsRes, videosRes, providersRes] = await Promise.all([
           fetch(`${API_BASE_URL}/movie/${movieId}?language=en-US`, API_OPTIONS),
@@ -82,12 +82,12 @@ const MovieDetails = ({ movieId, onClose }) => {
   const rentProviders = providers?.rent || [];
   const buyProviders = providers?.buy || [];
 
-  const toggleWishlist = () => {
+  const toggleWishlist = async () => {
     if (inWishlist) {
-      removeFromWishlist(movieId);
+      await removeFromWishlist(movieId);
       setInWishlist(false);
     } else {
-      addToWishlist(details);
+      await addToWishlist(details);
       setInWishlist(true);
     }
   };
@@ -103,16 +103,16 @@ const MovieDetails = ({ movieId, onClose }) => {
   const getBestDeal = () => {
     const allProviders = [...streamingProviders, ...rentProviders, ...buyProviders];
     const userPlatformIds = userPlatforms.map(p => p.id);
-    
+
     // Check if available on user's platforms
     const userProvider = streamingProviders.find(p => userPlatformIds.includes(p.provider_id));
     if (userProvider) return { provider: userProvider, type: 'stream', isUserPlatform: true };
-    
+
     // Otherwise, cheapest option
     if (streamingProviders.length > 0) return { provider: streamingProviders[0], type: 'stream', isUserPlatform: false };
     if (rentProviders.length > 0) return { provider: rentProviders[0], type: 'rent', isUserPlatform: false };
     if (buyProviders.length > 0) return { provider: buyProviders[0], type: 'buy', isUserPlatform: false };
-    
+
     return null;
   };
 
@@ -124,14 +124,14 @@ const MovieDetails = ({ movieId, onClose }) => {
   return (
     <div className="modal-backdrop" onClick={handleBackdropClick}>
       <div className="modal-content">
-        <button 
+        <button
           className={`wishlist-toggle-btn ${inWishlist ? 'in-wishlist' : ''}`}
           onClick={toggleWishlist}
           title={inWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
         >
           {inWishlist ? 'Remove from Favorites' : 'Add to Favorites'}
         </button>
-        
+
         <button className="modal-close" onClick={onClose}>
           ×
         </button>
@@ -153,7 +153,7 @@ const MovieDetails = ({ movieId, onClose }) => {
               <div className="modal-header-content">
                 <h2>{details.title}</h2>
                 {details.tagline && <p className="tagline">{details.tagline}</p>}
-                
+
                 <div className="modal-meta">
                   <div className="rating">
                     <img src="/star.svg" alt="Rating" />
@@ -175,124 +175,124 @@ const MovieDetails = ({ movieId, onClose }) => {
               </div>
             </div>
 
-              {(streamingProviders.length > 0 || rentProviders.length > 0 || buyProviders.length > 0) && (
-                <section>
-                  <h3>Where to Watch</h3>
+            {(streamingProviders.length > 0 || rentProviders.length > 0 || buyProviders.length > 0) && (
+              <section>
+                <h3>Where to Watch</h3>
 
-                  {bestDeal && (
-                    <div className="best-deal-banner">
-                      <span className="best-deal-badge">🏆 Best Deal</span>
-                      <div className="best-deal-content">
-                        <img
-                          src={`https://image.tmdb.org/t/p/original${bestDeal.provider.logo_path}`}
-                          alt={bestDeal.provider.provider_name}
-                          className="best-deal-logo"
-                        />
-                        <div>
-                          <p className="best-deal-name">{bestDeal.provider.provider_name}</p>
-                          <p className="best-deal-type">
-                            {bestDeal.isUserPlatform 
-                              ? '✨ Available on your platform' 
-                              : `${bestDeal.type.charAt(0).toUpperCase() + bestDeal.type.slice(1)} available`}
-                          </p>
+                {bestDeal && (
+                  <div className="best-deal-banner">
+                    <span className="best-deal-badge">🏆 Best Deal</span>
+                    <div className="best-deal-content">
+                      <img
+                        src={`https://image.tmdb.org/t/p/original${bestDeal.provider.logo_path}`}
+                        alt={bestDeal.provider.provider_name}
+                        className="best-deal-logo"
+                      />
+                      <div>
+                        <p className="best-deal-name">{bestDeal.provider.provider_name}</p>
+                        <p className="best-deal-type">
+                          {bestDeal.isUserPlatform
+                            ? '✨ Available on your platform'
+                            : `${bestDeal.type.charAt(0).toUpperCase() + bestDeal.type.slice(1)} available`}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {streamingProviders.length > 0 && (
+                  <div className="watch-section">
+                    <h4 className="watch-type">Stream</h4>
+                    <div className="providers-grid">
+                      {streamingProviders.map((provider) => (
+                        <div key={provider.provider_id} className="provider-card-wrapper">
+                          <a
+                            href={providers.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`provider-card ${hasPlatformPreference(provider.provider_id) ? 'user-platform' : ''}`}
+                            title={provider.provider_name}
+                          >
+                            {hasPlatformPreference(provider.provider_id) && (
+                              <span className="user-platform-badge">✓</span>
+                            )}
+                            <img
+                              src={`https://image.tmdb.org/t/p/original${provider.logo_path}`}
+                              alt={provider.provider_name}
+                            />
+                            <span>{provider.provider_name}</span>
+                            <span className="free-badge">Included</span>
+                          </a>
+                          <button
+                            className="platform-preference-btn"
+                            onClick={(e) => handlePlatformToggle(provider.provider_id, provider.provider_name, e)}
+                            title={hasPlatformPreference(provider.provider_id) ? 'Remove from my platforms' : 'Add to my platforms'}
+                          >
+                            {hasPlatformPreference(provider.provider_id) ? '⭐' : '☆'}
+                          </button>
                         </div>
-                      </div>
+                      ))}
                     </div>
-                  )}
-                  
-                  {streamingProviders.length > 0 && (
-                    <div className="watch-section">
-                      <h4 className="watch-type">Stream</h4>
-                      <div className="providers-grid">
-                        {streamingProviders.map((provider) => (
-                          <div key={provider.provider_id} className="provider-card-wrapper">
-                            <a
-                              href={providers.link}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className={`provider-card ${hasPlatformPreference(provider.provider_id) ? 'user-platform' : ''}`}
-                              title={provider.provider_name}
-                            >
-                              {hasPlatformPreference(provider.provider_id) && (
-                                <span className="user-platform-badge">✓</span>
-                              )}
-                              <img
-                                src={`https://image.tmdb.org/t/p/original${provider.logo_path}`}
-                                alt={provider.provider_name}
-                              />
-                              <span>{provider.provider_name}</span>
-                              <span className="free-badge">Included</span>
-                            </a>
-                            <button
-                              className="platform-preference-btn"
-                              onClick={(e) => handlePlatformToggle(provider.provider_id, provider.provider_name, e)}
-                              title={hasPlatformPreference(provider.provider_id) ? 'Remove from my platforms' : 'Add to my platforms'}
-                            >
-                              {hasPlatformPreference(provider.provider_id) ? '⭐' : '☆'}
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                  </div>
+                )}
 
-                  {rentProviders.length > 0 && (
-                    <div className="watch-section">
-                      <h4 className="watch-type">Rent</h4>
-                      <div className="providers-grid">
-                        {rentProviders.map((provider) => (
-                          <div key={provider.provider_id} className="provider-card-wrapper">
-                            <a
-                              href={providers.link}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="provider-card"
-                              title={provider.provider_name}
-                            >
-                              <img
-                                src={`https://image.tmdb.org/t/p/original${provider.logo_path}`}
-                                alt={provider.provider_name}
-                              />
-                              <span>{provider.provider_name}</span>
-                              <span className="rent-badge">Rental</span>
-                            </a>
-                          </div>
-                        ))}
-                      </div>
+                {rentProviders.length > 0 && (
+                  <div className="watch-section">
+                    <h4 className="watch-type">Rent</h4>
+                    <div className="providers-grid">
+                      {rentProviders.map((provider) => (
+                        <div key={provider.provider_id} className="provider-card-wrapper">
+                          <a
+                            href={providers.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="provider-card"
+                            title={provider.provider_name}
+                          >
+                            <img
+                              src={`https://image.tmdb.org/t/p/original${provider.logo_path}`}
+                              alt={provider.provider_name}
+                            />
+                            <span>{provider.provider_name}</span>
+                            <span className="rent-badge">Rental</span>
+                          </a>
+                        </div>
+                      ))}
                     </div>
-                  )}
+                  </div>
+                )}
 
-                  {buyProviders.length > 0 && (
-                    <div className="watch-section">
-                      <h4 className="watch-type">Buy</h4>
-                      <div className="providers-grid">
-                        {buyProviders.map((provider) => (
-                          <div key={provider.provider_id} className="provider-card-wrapper">
-                            <a
-                              href={providers.link}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="provider-card"
-                              title={provider.provider_name}
-                            >
-                              <img
-                                src={`https://image.tmdb.org/t/p/original${provider.logo_path}`}
-                                alt={provider.provider_name}
-                              />
-                              <span>{provider.provider_name}</span>
-                              <span className="buy-badge">Purchase</span>
-                            </a>
-                          </div>
-                        ))}
-                      </div>
+                {buyProviders.length > 0 && (
+                  <div className="watch-section">
+                    <h4 className="watch-type">Buy</h4>
+                    <div className="providers-grid">
+                      {buyProviders.map((provider) => (
+                        <div key={provider.provider_id} className="provider-card-wrapper">
+                          <a
+                            href={providers.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="provider-card"
+                            title={provider.provider_name}
+                          >
+                            <img
+                              src={`https://image.tmdb.org/t/p/original${provider.logo_path}`}
+                              alt={provider.provider_name}
+                            />
+                            <span>{provider.provider_name}</span>
+                            <span className="buy-badge">Purchase</span>
+                          </a>
+                        </div>
+                      ))}
                     </div>
-                  )}
+                  </div>
+                )}
 
-                  <p className="provider-note">
-                    Availability may vary by region. Powered by JustWatch.
-                  </p>
-                </section>
-              )}
+                <p className="provider-note">
+                  Availability may vary by region. Powered by JustWatch.
+                </p>
+              </section>
+            )}
 
             <div className="modal-sections">
               <section>

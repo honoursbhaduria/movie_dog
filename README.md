@@ -70,274 +70,71 @@ If you're getting started and need assistance or face any bugs, join our active 
 👉 **Responsiveness**: Fully responsive design that works seamlessly across devices.
 
 and many more, including code architecture and reusability
+## movie_finder
 
-## <a name="quick-start">🤸 Quick Start</a>
+A lightweight React app to search and browse movies using The Movie Database (TMDb) API.
 
-Follow these steps to set up the project locally on your machine.
+## Features
 
-**Prerequisites**
+- Search movies (debounced)
+- Browse popular/discovered movies with pagination
+- Movie details modal with trailer, cast, and "where to watch" providers
+- Wishlist (localStorage)
+- Trending section (Supabase-backed if configured, falls back to TMDb trending)
 
-Make sure you have the following installed on your machine:
+## Tech
 
-- [Git](https://git-scm.com/)
-- [Node.js](https://nodejs.org/en)
-- [npm](https://www.npmjs.com/) (Node Package Manager)
+- React + Vite
+- TMDb API
+- Optional: Supabase for storing trending searches
 
-**Cloning the Repository**
+## Quick Start
 
-```bash
-git clone https://github.com/adrianhajdin/react-movies.git
-cd react-movies
-
-```
-
-**Installation**
-
-Install the project dependencies using npm:
+1. Install dependencies
 
 ```bash
 npm install
 ```
 
-**Set Up Environment Variables**
+2. Add environment variables (copy `.env.example` or create a `.env`):
 
-Create a new file named `.env.local` in the root of your project and add the following content:
-
-```env
-VITE_TMDB_API_KEY=
-
-VITE_APPWRITE_PROJECT_ID=
-VITE_APPWRITE_DATABASE_ID=
-VITE_APPWRITE_COLLECTION_ID=
+```
+VITE_TMDB_API_KEY=YOUR_TMDB_BEARER_TOKEN
+# Optional Supabase (for persisted trending)
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key
 ```
 
-Replace the placeholder values with your actual **[TheMovieDatabase API](https://developer.themoviedb.org/reference/intro/getting-started)** and **[Appwrite](https://apwr.dev/JSM050)** credentials.
+- `VITE_TMDB_API_KEY` should be a TMDb v4 (Bearer) token or v3 key as used in the app.
+- If Supabase is not configured, the app uses TMDb's trending endpoint as a fallback.
 
-**Running the Project**
+3. Run the dev server
 
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:5173](http://localhost:5173) in your browser to view the project.
+Open http://localhost:5173 in your browser.
 
-## <a name="snippets">🕸️ Snippets</a>
+## Build
 
-<details>
-<summary><code>index.css</code></summary>
-
-```css
-@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap");
-
-@import "tailwindcss";
-
-@theme {
-  --color-primary: #030014;
-
-  --color-light-100: #cecefb;
-  --color-light-200: #a8b5db;
-
-  --color-gray-100: #9ca4ab;
-
-  --color-dark-100: #0f0d23;
-
-  --font-dm-sans: DM Sans, sans-serif;
-
-  --breakpoint-xs: 480px;
-
-  --background-image-hero-pattern: url("/hero-bg.png");
-}
-
-@layer base {
-  body {
-    font-family: "DM Sans", serif;
-    font-optical-sizing: auto;
-    background: #030014;
-  }
-
-  h1 {
-    @apply mx-auto max-w-4xl text-center text-5xl font-bold leading-tight tracking-[-1%] text-white sm:text-[64px] sm:leading-[76px];
-  }
-
-  h2 {
-    @apply text-2xl font-bold text-white sm:text-3xl;
-  }
-
-  main {
-    @apply min-h-screen relative bg-primary;
-  }
-
-  header {
-    @apply sm:mt-10 mt-5;
-  }
-
-  header img {
-    @apply w-full max-w-lg h-auto object-contain mx-auto drop-shadow-md;
-  }
-}
-
-@layer components {
-  .pattern {
-    @apply bg-hero-pattern w-full h-screen bg-center bg-cover absolute z-0;
-  }
-
-  .wrapper {
-    @apply px-5 py-12 xs:p-10 max-w-7xl mx-auto flex flex-col relative z-10;
-  }
-
-  .trending {
-    @apply mt-20;
-
-    & ul {
-      @apply flex flex-row overflow-y-auto gap-5 -mt-10 w-full hide-scrollbar;
-    }
-
-    & ul li {
-      @apply min-w-[230px] flex flex-row items-center;
-    }
-
-    & ul li p {
-      @apply fancy-text mt-[22px] text-nowrap;
-    }
-
-    & ul li img {
-      @apply w-[127px] h-[163px] rounded-lg object-cover -ml-3.5;
-    }
-  }
-
-  .search {
-    @apply w-full bg-light-100/5 px-4 py-3 rounded-lg mt-10 max-w-3xl mx-auto;
-
-    & div {
-      @apply relative flex items-center;
-    }
-
-    & img {
-      @apply absolute left-2 h-5 w-5;
-    }
-
-    & input {
-      @apply w-full bg-transparent py-2 sm:pr-10 pl-10 text-base text-gray-200 placeholder-light-200 outline-hidden;
-    }
-  }
-
-  .all-movies {
-    @apply space-y-9;
-
-    & ul {
-      @apply grid grid-cols-1 gap-5 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4;
-    }
-  }
-
-  .movie-card {
-    @apply bg-dark-100 p-5 rounded-2xl shadow-inner shadow-light-100/10;
-
-    & img {
-      @apply rounded-lg h-auto w-full;
-    }
-
-    & h3 {
-      @apply text-white font-bold text-base line-clamp-1;
-    }
-
-    & .content {
-      @apply mt-2 flex flex-row items-center flex-wrap gap-2;
-    }
-
-    & .rating {
-      @apply flex flex-row items-center gap-1;
-    }
-
-    & .rating img {
-      @apply size-4 object-contain;
-    }
-
-    & .rating p {
-      @apply font-bold text-base text-white;
-    }
-
-    & .content span {
-      @apply text-sm text-gray-100;
-    }
-
-    & .content .lang {
-      @apply capitalize text-gray-100 font-medium text-base;
-    }
-
-    & .content .year {
-      @apply text-gray-100 font-medium text-base;
-    }
-  }
-}
-
-@utility text-gradient {
-  @apply bg-linear-to-r from-[#D6C7FF] to-[#AB8BFF] bg-clip-text text-transparent;
-}
-
-@utility fancy-text {
-  -webkit-text-stroke: 5px rgba(206, 206, 251, 0.5);
-  font-size: 190px;
-  font-family: "Bebas Neue", sans-serif;
-}
-
-@utility hide-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
-}
+```bash
+npm run build
+npm run preview
 ```
 
-</details>
+## Notes
 
-<details>
-<summary><code>components/Spinner.jsx</code></summary>
+- Wishlist and user preferences are stored in `localStorage`.
+- To enable server-backed trending, create a `trending_searches` table in Supabase with columns: `id`, `search_term`, `count`, `movie_id`, `poster_url`, `title`, `updated_at`.
 
-```jsx
-import React from 'react'
+## Contributing
 
-const Spinner = () => {
-  return (
-    <div role="status">
-      <svg aria-hidden="true"
-           className="w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-indigo-600"
-           viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path
-          d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
-          fill="currentColor"/>
-        <path
-          d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
-          fill="currentFill"/>
-      </svg>
-      <span className="sr-only">Loading...</span>
-    </div>
-  )
-}
-export default Spinner
-```
-</details>
+1. Fork the repo
+2. Create a branch: `git checkout -b feat/your-feature`
+3. Commit your changes and open a PR
 
+## License
 
-## <a name="links">🔗 Assets</a>
+MIT
 
-Assets and snippets used in the project can be found in the **[video kit](https://jsm.dev/react25-kit)**.
-
-<a href="https://jsm.dev/react25-kit" target="_blank">
-  <img src="public/readme/videokit.png" alt="Video Kit Banner">
-</a>
-
-## <a name="more">🚀 More</a>
-
-**Advance your skills with Next.js Pro Course**
-
-Enjoyed creating this project? Dive deeper into our PRO courses for a richer learning adventure. They're packed with
-detailed explanations, cool features, and exercises to boost your skills. Give it a go!
-
-<a href="https://jsm.dev/react25-jsmpro" target="_blank">
-  <img src="public/readme/jsmpro.png" alt="Project Banner">
-</a># movie_finder
-# movie_finder
-# movie_finder
