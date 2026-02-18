@@ -6,7 +6,7 @@ import MovieDetails from './components/MovieDetails.jsx'
 import Wishlist from './components/Wishlist.jsx'
 
 import { Link } from 'react-router-dom'
-import { isAuthenticated, getUser } from './utils/auth'
+import { initAuthListener, getUser } from './utils/auth'
 import { useDebounce } from 'react-use'
 import { getTrendingMovies, updateSearchCount } from './supabase.js'
 import { aiFilterMovies } from './utils/gemini.js'
@@ -42,6 +42,15 @@ const App = () => {
   const [aiMode, setAiMode] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiUsesLeft, setAiUsesLeft] = useState(2);
+  const [authUser, setAuthUser] = useState(null);
+
+  // Reactive auth state listener
+  useEffect(() => {
+    const unsub = initAuthListener((session) => {
+      setAuthUser(session ? getUser() : null);
+    });
+    return unsub;
+  }, []);
 
   // Debounce the search term to prevent making too many API requests
   // by waiting for the user to stop typing for 500ms
@@ -190,15 +199,19 @@ const App = () => {
               My Favorites
             </button>
 
-            {isAuthenticated() ? (
+            {authUser ? (
               <>
                 <div className="user-badge">
-                  <div className="user-avatar">
-                    {(getUser()?.name || getUser()?.email || '?').charAt(0).toUpperCase()}
-                  </div>
+                  {authUser.avatar ? (
+                    <img src={authUser.avatar} alt="" className="user-avatar user-avatar--img" />
+                  ) : (
+                    <div className="user-avatar">
+                      {(authUser.name || authUser.email || '?').charAt(0).toUpperCase()}
+                    </div>
+                  )}
                   <div className="user-info">
-                    {getUser()?.name && <span className="user-name">{getUser().name}</span>}
-                    <span className="user-email">{getUser()?.email}</span>
+                    {authUser.name && <span className="user-name">{authUser.name}</span>}
+                    <span className="user-email">{authUser.email}</span>
                   </div>
                 </div>
                 <Link to="/logout" className="logout-btn">
@@ -237,7 +250,7 @@ const App = () => {
 
 
 
-        {!isAuthenticated() && (
+        {!authUser && (
           <div className="login-cta">
             <div className="login-cta-content">
               <p className="login-cta-title">Unlock the Full Experience</p>

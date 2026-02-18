@@ -6,8 +6,11 @@ const Logout = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        logout();
-        navigate('/', { replace: true });
+        const doLogout = async () => {
+            await logout();
+            navigate('/', { replace: true });
+        };
+        doLogout();
     }, [navigate]);
 
     return null;
