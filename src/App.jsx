@@ -4,6 +4,7 @@ import Spinner from './components/Spinner.jsx'
 import MovieCard from './components/MovieCard.jsx'
 import MovieDetails from './components/MovieDetails.jsx'
 import Wishlist from './components/Wishlist.jsx'
+import AIChatbot from './components/AIChatbot.jsx'
 
 import { Link } from 'react-router-dom'
 import { initAuthListener, getUser } from './utils/auth'
@@ -43,6 +44,7 @@ const App = () => {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiUsesLeft, setAiUsesLeft] = useState(2);
   const [authUser, setAuthUser] = useState(null);
+  const [chatbotOpen, setChatbotOpen] = useState(false);
 
   // Reactive auth state listener
   useEffect(() => {
@@ -336,6 +338,30 @@ const App = () => {
           }}
           onClose={() => setShowWishlist(false)}
         />
+      )}
+
+      {/* AI Chatbot — logged-in users only */}
+      {authUser && (
+        <>
+          <AIChatbot
+            isOpen={chatbotOpen}
+            onClose={() => setChatbotOpen(false)}
+            onMovieClick={(movie) => {
+              setChatbotOpen(false);
+              setSelectedMovie(movie.id);
+            }}
+          />
+
+          {!chatbotOpen && (
+            <button
+              className="chatbot-fab"
+              onClick={() => setChatbotOpen(true)}
+              title="Chat with MovieBot AI"
+            >
+              <img src="/logo.png" alt="MovieBot" className="chatbot-fab-logo" />
+            </button>
+          )}
+        </>
       )}
     </main>
   )
