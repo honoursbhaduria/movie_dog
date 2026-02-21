@@ -107,8 +107,6 @@ const AIChatbot = ({ isOpen, onClose, onMovieClick }) => {
     const handleClearChat = () => {
         setMessages([]);
         historyRef.current = [];
-        setUsesLeft(MAX_MESSAGES);
-        localStorage.removeItem(STORAGE_KEY);
     };
 
     if (!isOpen) return null;

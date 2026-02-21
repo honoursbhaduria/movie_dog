@@ -11,6 +11,7 @@ import { initAuthListener, getUser } from './utils/auth'
 import { useDebounce } from 'react-use'
 import { getTrendingMovies, updateSearchCount } from './supabase.js'
 import { aiFilterMovies } from './utils/gemini.js'
+import { addToWishlist } from './utils/wishlist.js'
 
 const API_BASE_URL = 'https://api.themoviedb.org/3';
 
@@ -45,6 +46,7 @@ const App = () => {
   const [aiUsesLeft, setAiUsesLeft] = useState(2);
   const [authUser, setAuthUser] = useState(null);
   const [chatbotOpen, setChatbotOpen] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   // Reactive auth state listener
   useEffect(() => {
@@ -193,17 +195,13 @@ const App = () => {
       <div className="wrapper">
         <header>
           <div className="header-actions">
-            <button
-              className="wishlist-btn"
-              onClick={() => setShowWishlist(true)}
-              title="View Wishlist"
-            >
-              My Favorites
-            </button>
-
             {authUser ? (
-              <>
-                <div className="user-badge">
+              <div className="profile-menu-container">
+                <button
+                  className="user-badge profile-toggle-btn"
+                  onClick={() => setShowProfileMenu(!showProfileMenu)}
+                  aria-expanded={showProfileMenu}
+                >
                   {authUser.avatar ? (
                     <img src={authUser.avatar} alt="" className="user-avatar user-avatar--img" />
                   ) : (
@@ -211,18 +209,41 @@ const App = () => {
                       {(authUser.name || authUser.email || '?').charAt(0).toUpperCase()}
                     </div>
                   )}
-                  <div className="user-info">
+                  <div className="user-info desktop-only">
                     {authUser.name && <span className="user-name">{authUser.name}</span>}
                     <span className="user-email">{authUser.email}</span>
                   </div>
-                </div>
-                <Link to="/logout" className="logout-btn">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>
-                  Logout
-                </Link>
-              </>
+                  <svg className={`chevron ${showProfileMenu ? 'open' : ''}`} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </button>
+
+                {showProfileMenu && (
+                  <div className="profile-dropdown">
+                    <button
+                      className="dropdown-item"
+                      onClick={() => {
+                        setShowWishlist(true);
+                        setShowProfileMenu(false);
+                      }}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                      My Favorites
+                    </button>
+                    <Link to="/logout" className="dropdown-item text-red-400" onClick={() => setShowProfileMenu(false)}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>
+                      Logout
+                    </Link>
+                  </div>
+                )}
+              </div>
             ) : (
               <>
+                <button
+                  className="wishlist-btn"
+                  onClick={() => setShowWishlist(true)}
+                  title="View Wishlist"
+                >
+                  My Favorites
+                </button>
                 <Link to="/login" className="wishlist-btn" style={{ marginLeft: 12 }}>Login</Link>
                 <Link to="/register" className="auth-register-btn" style={{ marginLeft: 8 }}>Register</Link>
               </>
@@ -346,7 +367,8 @@ const App = () => {
           <AIChatbot
             isOpen={chatbotOpen}
             onClose={() => setChatbotOpen(false)}
-            onMovieClick={(movie) => {
+            onMovieClick={async (movie) => {
+              await addToWishlist(movie);
               setChatbotOpen(false);
               setSelectedMovie(movie.id);
             }}

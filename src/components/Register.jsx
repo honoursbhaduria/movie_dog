@@ -56,7 +56,7 @@ const Register = () => {
             return;
         }
 
-        navigate('/login', { state: { message: 'Account created! You can now sign in.' }, replace: true });
+        navigate('/login', { state: { message: 'Account created! Please enter the 6-digit confirmation code sent to your email.', isVerifying: true }, replace: true });
     };
 
     const handleGoogleSignup = async () => {

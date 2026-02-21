@@ -7,6 +7,11 @@ import Login from './components/Login.jsx'
 import Register from './components/Register.jsx'
 import Logout from './components/Logout.jsx'
 import AuthCallback from './components/AuthCallback.jsx'
+import { initAuthListener } from './utils/auth.js'
+
+initAuthListener((session) => {
+  console.log('Auth state initialized. Session exists:', !!session);
+});
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

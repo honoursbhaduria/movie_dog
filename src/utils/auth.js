@@ -22,7 +22,7 @@ let _session = null;
  * @param {(session: object|null) => void} onChange — called whenever session changes
  * @returns {() => void} unsubscribe function
  */
-export const initAuthListener = (onChange) => {
+export const initAuthListener = (onChange = () => { }) => {
   if (!supabase) return () => { };
 
   // Seed the current session immediately
@@ -105,7 +105,41 @@ export const login = async (email, password) => {
     };
   } catch (err) {
     console.error('Login error:', err);
-    return { ok: false, message: err.message || 'Login failed.' };
+    let msg = err.message || 'Login failed.';
+    if (msg.toLowerCase().includes('email not confirmed')) {
+      msg = 'Please check your email to confirm your account before logging in.';
+    } else if (msg.toLowerCase().includes('invalid login credentials')) {
+      msg = 'Invalid email or password. If you just registered, your email might not be confirmed yet.';
+    }
+    return { ok: false, message: msg };
+  }
+};
+
+/**
+ * Verify an email with a 6-digit OTP code sent by Supabase.
+ * @returns {Promise<{ ok: boolean, message: string }>}
+ */
+export const verifyEmailOtp = async (email, token) => {
+  if (!supabase) {
+    return { ok: false, message: 'Supabase is not configured.' };
+  }
+
+  try {
+    const { data, error } = await supabase.auth.verifyOtp({
+      email: email.toLowerCase(),
+      token,
+      type: 'signup',
+    });
+
+    if (error) throw error;
+
+    return {
+      ok: true,
+      message: 'Email confirmed successfully! You can now log in.',
+    };
+  } catch (err) {
+    console.error('Verification error:', err);
+    return { ok: false, message: err.message || 'Verification failed.' };
   }
 };
 

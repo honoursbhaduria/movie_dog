@@ -1,6 +1,7 @@
 // Gemini 2.5 Flash — movie recommendation engine
 
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
+const GEMINI_TEMPERATURE = parseFloat(import.meta.env.VITE_GEMINI_TEMPERATURE || '0.9');
 const GEMINI_MODEL = 'gemini-2.5-flash';
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
 
@@ -48,7 +49,7 @@ Respond ONLY with a valid JSON array. No markdown, no extra text. Example:
             body: JSON.stringify({
                 contents: [{ parts: [{ text: prompt }] }],
                 generationConfig: {
-                    temperature: 0.9,
+                    temperature: GEMINI_TEMPERATURE,
                     maxOutputTokens: 1024,
                 },
             }),
@@ -131,7 +132,7 @@ Format: [{"title":"Movie Title","year":"2020"},{"title":"Another Movie","year":"
             body: JSON.stringify({
                 contents: [{ parts: [{ text: prompt }] }],
                 generationConfig: {
-                    temperature: 0.7,
+                    temperature: GEMINI_TEMPERATURE,
                     maxOutputTokens: 512,
                 },
             }),

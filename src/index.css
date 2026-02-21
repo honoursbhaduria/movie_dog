@@ -2032,6 +2032,78 @@
       padding: 1.5rem 1rem;
     }
   }
+  .profile-menu-container {
+    position: relative;
+    display: inline-block;
+  }
+
+  .profile-toggle-btn {
+    cursor: pointer;
+    border: none;
+    outline: none;
+  }
+
+  .chevron {
+    transition: transform 0.2s ease;
+    margin-left: 0.25rem;
+    color: #9ca4ab;
+  }
+
+  .chevron.open {
+    transform: rotate(180deg);
+  }
+
+  .profile-dropdown {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    right: 0;
+    min-width: 160px;
+    background: #0f0d23;
+    border: 1px solid rgba(206, 206, 251, 0.1);
+    border-radius: 0.75rem;
+    padding: 0.5rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    z-index: 50;
+    animation: fadeIn 0.15s ease-out;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    width: 100%;
+    text-align: left;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: white;
+    background: transparent;
+    border: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .dropdown-item:hover {
+    background: rgba(206, 206, 251, 0.08);
+  }
+
+  .dropdown-item.text-red-400 {
+    color: #fca5a5;
+  }
+
+  .dropdown-item.text-red-400:hover {
+    background: rgba(239, 68, 68, 0.08);
+  }
+
+  @media (max-width: 480px) {
+    .desktop-only {
+      display: none;
+    }
+  }
 }
 
 @utility text-gradient {

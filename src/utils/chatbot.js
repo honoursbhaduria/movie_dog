@@ -1,6 +1,7 @@
 // AI Movie Chatbot — Gemini with Google Search grounding + TMDB resolution
 
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
+const GEMINI_TEMPERATURE = parseFloat(import.meta.env.VITE_GEMINI_TEMPERATURE || '0.9');
 const GEMINI_MODEL = 'gemini-2.5-flash';
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
 
@@ -13,17 +14,19 @@ const TMDB_OPTIONS = {
     },
 };
 
-const SYSTEM_PROMPT = `You are MovieDog, a movie recommendation assistant. Keep replies SHORT (1-2 sentences max + movie list).
+const SYSTEM_PROMPT = `You are MovieDog, an expert AI movie and TV show recommendation assistant. Keep replies SHORT (1-2 sentences max + movie list).
 
-Rules:
-- Recommend real movies with title and year.
-- When recommending, end with JSON:
+CRITICAL RULES:
+1. You MUST ONLY discuss movies, TV shows, actors, directors, and cinema. 
+2. If the user asks about ANY other topic (politics, history, programming, math, presidents, general knowledge, etc.), you MUST politely refuse and guide them back to movies. Example: "I only know about movies and TV shows! How about I recommend a good political thriller instead?"
+3. Recommend real movies with title and year.
+4. When recommending, end with JSON:
 \`\`\`json
 [{"title":"Movie","year":"2020","reason":"Brief reason"}]
 \`\`\`
-- Only include JSON when recommending. For questions, reply normally.
-- Recommend 3-5 movies per request.
-- Ask follow-up if the request is vague.`;
+5. Only include JSON when recommending. For questions, reply normally.
+6. Recommend 3-5 movies per request.
+7. Ask follow-up if the request is vague.`;
 
 /**
  * Send a message to the AI chatbot.
@@ -124,7 +127,7 @@ const callGemini = async (contents, useSearch = true, retryCount = 0) => {
         },
         contents,
         generationConfig: {
-            temperature: 0.5,
+            temperature: GEMINI_TEMPERATURE,
             maxOutputTokens: 1024,
         },
     };
