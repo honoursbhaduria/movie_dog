@@ -37,6 +37,7 @@ export const getWishlist = async () => {
         vote_average: row.vote_average,
         release_date: row.release_date,
         original_language: row.original_language,
+        media_type: row.media_type || 'movie',
         addedAt: row.added_at,
         _supabaseId: row.id,
       }));
@@ -53,6 +54,10 @@ export const getWishlist = async () => {
 export const addToWishlist = async (movie) => {
   const user = getUser();
 
+  // Detect media type: TV shows have 'name' instead of 'title' in many TMDB responses,
+  // or they explicitly have media_type === 'tv'
+  const media_type = (movie.media_type === 'tv' || !movie.title) ? 'tv' : 'movie';
+
   if (supabase && user?.id) {
     try {
       const { error } = await supabase
@@ -60,17 +65,19 @@ export const addToWishlist = async (movie) => {
         .upsert({
           user_id: user.id,
           movie_id: movie.id,
-          title: movie.title,
+          title: movie.title || movie.name,
           poster_path: movie.poster_path,
           vote_average: movie.vote_average,
-          release_date: movie.release_date,
+          release_date: movie.release_date || movie.first_air_date,
           original_language: movie.original_language,
+          media_type: media_type,
         }, { onConflict: 'user_id,movie_id' });
 
       if (error) throw error;
       return true;
     } catch (err) {
       console.error('Error adding favorite to Supabase:', err);
+      // We still try to return true if it was at least saved locally or if we want to proceed
       return false;
     }
   }
@@ -79,7 +86,11 @@ export const addToWishlist = async (movie) => {
   const wishlist = await getWishlist();
   const exists = wishlist.find(item => item.id === movie.id);
   if (!exists) {
-    wishlist.push({ ...movie, addedAt: new Date().toISOString() });
+    wishlist.push({ 
+      ...movie, 
+      media_type: media_type, 
+      addedAt: new Date().toISOString() 
+    });
     localStorage.setItem('movieWishlist', JSON.stringify(wishlist));
     return true;
   }

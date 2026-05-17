@@ -56,7 +56,7 @@ const Wishlist = ({ onMovieClick, onClose }) => {
                 <li key={movie.id} className="wishlist-item">
                   <MovieCard
                     movie={movie}
-                    onClick={() => onMovieClick(movie.id)}
+                    onClick={() => onMovieClick(movie.id, movie.media_type)}
                   />
                   <button
                     className="remove-wishlist-btn"

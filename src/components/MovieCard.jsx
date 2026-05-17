@@ -1,17 +1,29 @@
 import React from 'react'
 
 const MovieCard = ({ movie, onClick }) => {
-  const { title, vote_average, poster_path, release_date, original_language } = movie;
+  const { 
+    title, 
+    name, 
+    vote_average, 
+    poster_path, 
+    release_date, 
+    first_air_date, 
+    original_language 
+  } = movie;
+  
+  const displayTitle = title || name;
+  const displayDate = (release_date || first_air_date || '').split('-')[0] || 'N/A';
+
   return (
     <div className="movie-card" onClick={onClick}>
       <img
         src={poster_path ?
           `https://image.tmdb.org/t/p/w500/${poster_path}` : '/no-movie.png'}
-        alt={title}
+        alt={displayTitle}
       />
 
       <div className="mt-4">
-        <h3>{title}</h3>
+        <h3>{displayTitle}</h3>
 
         <div className="content">
           <div className="rating">
@@ -24,7 +36,7 @@ const MovieCard = ({ movie, onClick }) => {
 
           <span>•</span>
           <p className="year">
-            {release_date ? release_date.split('-')[0] : 'N/A'}
+            {displayDate}
           </p>
         </div>
       </div>
@@ -32,7 +44,3 @@ const MovieCard = ({ movie, onClick }) => {
   )
 }
 export default MovieCard
-
-
-
-

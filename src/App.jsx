@@ -29,6 +29,10 @@ const App = () => {
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
   const [searchTerm, setSearchTerm] = useState('');
 
+  const [contentType, setContentType] = useState('movie'); // 'movie' or 'tv'
+  const [category, setCategory] = useState('all'); // 'all', 'bollywood', 'hollywood'
+  const [language, setLanguage] = useState('all'); // 'all', 'hi', 'en', etc.
+
   const [movieList, setMovieList] = useState([]);
   const [errorMessage, setErrorMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -39,7 +43,7 @@ const App = () => {
   const [totalResults, setTotalResults] = useState(0);
 
   const [trendingMovies, setTrendingMovies] = useState([]);
-  const [selectedMovie, setSelectedMovie] = useState(null);
+  const [selectedContent, setSelectedContent] = useState(null);
   const [showWishlist, setShowWishlist] = useState(false);
   const [aiMode, setAiMode] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
@@ -60,7 +64,7 @@ const App = () => {
   // by waiting for the user to stop typing for 500ms
   useDebounce(() => setDebouncedSearchTerm(searchTerm), 500, [searchTerm])
 
-  const fetchMovies = async (query = '', page = 1, append = false) => {
+  const fetchContent = async (query = '', page = 1, append = false) => {
     if (append) {
       setIsLoadingMore(true);
     } else {
@@ -70,63 +74,77 @@ const App = () => {
     setErrorMessage('');
 
     try {
-      const endpoint = query
-        ? `${API_BASE_URL}/search/movie?query=${encodeURIComponent(query)}&page=${page}`
-        : `${API_BASE_URL}/discover/movie?sort_by=popularity.desc&page=${page}`;
+      let endpoint = '';
+      const params = new URLSearchParams({
+        page: page.toString(),
+        include_adult: 'false',
+        language: 'en-US'
+      });
+
+      if (query) {
+        endpoint = `${API_BASE_URL}/search/${contentType}?query=${encodeURIComponent(query)}&${params.toString()}`;
+      } else {
+        // Discover with filters
+        if (category === 'bollywood') {
+          params.append('with_origin_country', 'IN');
+          params.append('with_original_language', 'hi');
+        } else if (category === 'hollywood') {
+          params.append('with_origin_country', 'US');
+          params.append('with_original_language', 'en');
+        }
+
+        if (language !== 'all') {
+          params.append('with_original_language', language);
+        }
+
+        endpoint = `${API_BASE_URL}/discover/${contentType}?sort_by=popularity.desc&${params.toString()}`;
+      }
 
       const response = await fetch(endpoint, API_OPTIONS);
 
       if (!response.ok) {
-        throw new Error('Failed to fetch movies');
+        throw new Error(`Failed to fetch ${contentType === 'movie' ? 'movies' : 'web series'}`);
       }
 
       const data = await response.json();
 
-      if (data.Response === 'False') {
-        setErrorMessage(data.Error || 'Failed to fetch movies');
-        setMovieList([]);
-        return;
-      }
-
-      const newMovies = data.results || [];
+      const newItems = data.results || [];
 
       if (append) {
-        setMovieList(prev => [...prev, ...newMovies]);
+        setMovieList(prev => [...prev, ...newItems]);
       } else {
-        setMovieList(newMovies);
+        setMovieList(newItems);
       }
 
       setCurrentPage(data.page || page);
-      setTotalPages(Math.min(data.total_pages || 0, 500)); // API limits to 500 pages
+      setTotalPages(Math.min(data.total_pages || 0, 500));
       setTotalResults(data.total_results || 0);
 
-      if (query && newMovies.length > 0) {
-        await updateSearchCount(query, newMovies[0]);
+      if (query && newItems.length > 0) {
+        await updateSearchCount(query, newItems[0]);
       }
     } catch (error) {
-      console.error(`Error fetching movies: ${error}`);
-      setErrorMessage('Error fetching movies. Please try again later.');
+      console.error(`Error fetching content: ${error}`);
+      setErrorMessage(`Error fetching ${contentType === 'movie' ? 'movies' : 'web series'}. Please try again later.`);
     } finally {
       setIsLoading(false);
       setIsLoadingMore(false);
     }
   }
 
-  const loadMoreMovies = () => {
+  const loadMoreContent = () => {
     if (currentPage < totalPages) {
-      fetchMovies(debouncedSearchTerm, currentPage + 1, true);
+      fetchContent(debouncedSearchTerm, currentPage + 1, true);
     }
   }
 
-  const loadTrendingMovies = async () => {
+  const loadTrendingContent = async () => {
     try {
       const movies = await getTrendingMovies();
 
-      // If supabase isn't configured or returned no results, fall back
-      // to TMDb's trending endpoint so the UI still shows trending items.
       if (!movies || movies.length === 0) {
         try {
-          const resp = await fetch(`${API_BASE_URL}/trending/movie/day`, API_OPTIONS);
+          const resp = await fetch(`${API_BASE_URL}/trending/${contentType}/day`, API_OPTIONS);
           if (resp && resp.ok) {
             const tm = await resp.json();
             const top = (tm.results || []).slice(0, 5).map(m => ({
@@ -145,7 +163,7 @@ const App = () => {
 
       setTrendingMovies(movies);
     } catch (error) {
-      console.error(`Error fetching trending movies: ${error}`);
+      console.error(`Error fetching trending content: ${error}`);
     }
   }
 
@@ -153,14 +171,12 @@ const App = () => {
     setCurrentPage(1);
 
     if (aiMode && debouncedSearchTerm.trim()) {
-      // Check AI usage limit
       if (aiUsesLeft <= 0) {
         setErrorMessage('You\'ve used your 2 free AI searches. Switch back to normal search.');
         setMovieList([]);
         return;
       }
 
-      // AI-powered filter
       setIsLoading(true);
       setAiLoading(true);
       setMovieList([]);
@@ -180,13 +196,13 @@ const App = () => {
         setAiLoading(false);
       });
     } else {
-      fetchMovies(debouncedSearchTerm, 1, false);
+      fetchContent(debouncedSearchTerm, 1, false);
     }
-  }, [debouncedSearchTerm, aiMode]);
+  }, [debouncedSearchTerm, aiMode, contentType, category, language]);
 
   useEffect(() => {
-    loadTrendingMovies();
-  }, []);
+    loadTrendingContent();
+  }, [contentType]);
 
   return (
     <main>
@@ -251,14 +267,26 @@ const App = () => {
           </div>
 
           <img src="/hero.png" alt="Hero Banner" />
-          <h1>Find <span className="text-gradient">Movies</span> You'll Enjoy Without the Hassle</h1>
+          <h1>Find <span className="text-gradient">{contentType === 'movie' ? 'Movies' : 'Web Series'}</span> You'll Enjoy Without the Hassle</h1>
 
-          <Search searchTerm={searchTerm} setSearchTerm={setSearchTerm} aiMode={aiMode} setAiMode={setAiMode} aiUsesLeft={aiUsesLeft} />
+          <Search 
+            searchTerm={searchTerm} 
+            setSearchTerm={setSearchTerm} 
+            aiMode={aiMode} 
+            setAiMode={setAiMode} 
+            aiUsesLeft={aiUsesLeft}
+            contentType={contentType}
+            setContentType={setContentType}
+            category={category}
+            setCategory={setCategory}
+            language={language}
+            setLanguage={setLanguage}
+          />
         </header>
 
         {trendingMovies.length > 0 && (
           <section className="trending">
-            <h2>Trending Movies</h2>
+            <h2>Trending {contentType === 'movie' ? 'Movies' : 'Web Series'}</h2>
 
             <ul>
               {trendingMovies.map((movie, index) => (
@@ -270,8 +298,6 @@ const App = () => {
             </ul>
           </section>
         )}
-
-
 
         {!authUser && (
           <div className="login-cta">
@@ -303,12 +329,12 @@ const App = () => {
         )}
 
         <section className="all-movies">
-          <h2>{aiMode && debouncedSearchTerm ? 'AI Results' : 'All Movies'}</h2>
+          <h2>{aiMode && debouncedSearchTerm ? 'AI Results' : `All ${contentType === 'movie' ? 'Movies' : 'Web Series'}`}</h2>
           {totalResults > 0 && (
             <p className="text-gray-200 text-sm mb-4">
               {aiMode && debouncedSearchTerm
-                ? `Found ${movieList.length} movies matching your description`
-                : `Showing ${movieList.length} of ${totalResults.toLocaleString()} movies`}
+                ? `Found ${movieList.length} items matching your description`
+                : `Showing ${movieList.length} of ${totalResults.toLocaleString()} items`}
             </p>
           )}
 
@@ -323,7 +349,7 @@ const App = () => {
                   <MovieCard
                     key={movie.id}
                     movie={movie}
-                    onClick={() => setSelectedMovie(movie.id)}
+                    onClick={() => setSelectedContent({ id: movie.id, type: contentType })}
                   />
                 ))}
               </ul>
@@ -331,7 +357,7 @@ const App = () => {
               {currentPage < totalPages && (
                 <div className="flex justify-center mt-10">
                   <button
-                    onClick={loadMoreMovies}
+                    onClick={loadMoreContent}
                     disabled={isLoadingMore}
                     className="load-more-btn"
                   >
@@ -344,24 +370,24 @@ const App = () => {
         </section>
       </div>
 
-      {selectedMovie && (
+      {selectedContent && (
         <MovieDetails
-          movieId={selectedMovie}
-          onClose={() => setSelectedMovie(null)}
+          movieId={selectedContent.id}
+          contentType={selectedContent.type}
+          onClose={() => setSelectedContent(null)}
         />
       )}
 
       {showWishlist && (
         <Wishlist
-          onMovieClick={(id) => {
+          onMovieClick={(id, type) => {
             setShowWishlist(false);
-            setSelectedMovie(id);
+            setSelectedContent({ id, type: type || contentType });
           }}
           onClose={() => setShowWishlist(false)}
         />
       )}
 
-      {/* AI Chatbot — logged-in users only */}
       {authUser && (
         <>
           <AIChatbot
@@ -370,7 +396,7 @@ const App = () => {
             onMovieClick={async (movie) => {
               await addToWishlist(movie);
               setChatbotOpen(false);
-              setSelectedMovie(movie.id);
+              setSelectedContent({ id: movie.id, type: 'movie' }); // Bot usually recommends movies
             }}
           />
 
@@ -390,6 +416,3 @@ const App = () => {
 }
 
 export default App
-
-
-

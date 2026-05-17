@@ -24,7 +24,7 @@ const API_OPTIONS = {
   }
 }
 
-const MovieDetails = ({ movieId, onClose }) => {
+const MovieDetails = ({ movieId, contentType = 'movie', onClose }) => {
   const [details, setDetails] = useState(null);
   const [credits, setCredits] = useState(null);
   const [videos, setVideos] = useState(null);
@@ -35,6 +35,12 @@ const MovieDetails = ({ movieId, onClose }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isUnavailable, setIsUnavailable] = useState(false);
 
+  // TV specific state
+  const [selectedSeason, setSelectedSeason] = useState(1);
+  const [selectedEpisode, setSelectedEpisode] = useState(1);
+  const [episodes, setEpisodes] = useState([]);
+  const [loadingEpisodes, setLoadingEpisodes] = useState(false);
+
   useEffect(() => {
     if (movieId) {
       isInWishlist(movieId).then(val => setInWishlist(val));
@@ -43,16 +49,18 @@ const MovieDetails = ({ movieId, onClose }) => {
       setIsUnavailable(false);
     }
 
-    const fetchMovieDetails = async () => {
+    const fetchDetails = async () => {
       try {
         setIsLoading(true);
 
-        // Fetch movie details, credits, and videos in parallel
+        const type = contentType === 'tv' ? 'tv' : 'movie';
+        
+        // Fetch details, credits, and videos in parallel
         const [detailsRes, creditsRes, videosRes, providersRes] = await Promise.all([
-          fetch(`${API_BASE_URL}/movie/${movieId}?language=en-US`, API_OPTIONS),
-          fetch(`${API_BASE_URL}/movie/${movieId}/credits?language=en-US`, API_OPTIONS),
-          fetch(`${API_BASE_URL}/movie/${movieId}/videos?language=en-US`, API_OPTIONS),
-          fetch(`${API_BASE_URL}/movie/${movieId}/watch/providers`, API_OPTIONS)
+          fetch(`${API_BASE_URL}/${type}/${movieId}?language=en-US`, API_OPTIONS),
+          fetch(`${API_BASE_URL}/${type}/${movieId}/credits?language=en-US`, API_OPTIONS),
+          fetch(`${API_BASE_URL}/${type}/${movieId}/videos?language=en-US`, API_OPTIONS),
+          fetch(`${API_BASE_URL}/${type}/${movieId}/watch/providers`, API_OPTIONS)
         ]);
 
         const detailsData = await detailsRes.json();
@@ -64,17 +72,41 @@ const MovieDetails = ({ movieId, onClose }) => {
         setCredits(creditsData);
         setVideos(videosData);
         setWatchProviders(providersData);
+
+        if (contentType === 'tv' && detailsData.seasons?.length > 0) {
+          const firstSeason = detailsData.seasons.find(s => s.season_number > 0) || detailsData.seasons[0];
+          setSelectedSeason(firstSeason.season_number);
+        }
       } catch (error) {
-        console.error('Error fetching movie details:', error);
+        console.error('Error fetching details:', error);
       } finally {
         setIsLoading(false);
       }
     };
 
     if (movieId) {
-      fetchMovieDetails();
+      fetchDetails();
     }
-  }, [movieId]);
+  }, [movieId, contentType]);
+
+  useEffect(() => {
+    const fetchEpisodes = async () => {
+      if (contentType !== 'tv' || !movieId || selectedSeason === null) return;
+      
+      try {
+        setLoadingEpisodes(true);
+        const res = await fetch(`${API_BASE_URL}/tv/${movieId}/season/${selectedSeason}?language=en-US`, API_OPTIONS);
+        const data = await res.json();
+        setEpisodes(data.episodes || []);
+      } catch (error) {
+        console.error('Error fetching episodes:', error);
+      } finally {
+        setLoadingEpisodes(false);
+      }
+    };
+
+    fetchEpisodes();
+  }, [movieId, contentType, selectedSeason]);
 
   useEffect(() => {
     const handlePlayerMessage = (event) => {
@@ -82,20 +114,14 @@ const MovieDetails = ({ movieId, onClose }) => {
         try {
           const message = JSON.parse(event.data);
           if (message.type === "PLAYER_EVENT") {
-            // console.log("Vidking Player Event:", message.data);
-            
-            // Check for potential error or 'not found' signals
             if (message.data.event === "error" || message.data.event === "not_found") {
               setIsUnavailable(true);
             }
-
-            // Save progress on timeupdate or other significant events
             if (["timeupdate", "pause", "ended"].includes(message.data.event)) {
               saveWatchProgress(movieId, message.data);
             }
           }
         } catch {
-          // Not a JSON message or not from our player
         }
       }
     };
@@ -112,12 +138,8 @@ const MovieDetails = ({ movieId, onClose }) => {
     }
   };
 
-
-  // Get watch providers for US (you can change to user's region)
   const providers = watchProviders?.results?.US;
   const streamingProviders = providers?.flatrate || [];
-  const rentProviders = providers?.rent || [];
-  const buyProviders = providers?.buy || [];
 
   const toggleWishlist = async () => {
     if (inWishlist) {
@@ -129,33 +151,26 @@ const MovieDetails = ({ movieId, onClose }) => {
     }
   };
 
-  const handlePlatformToggle = (providerId, providerName, e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    togglePlatformPreference(providerId, providerName);
-    setUserPlatforms(getPlatformPreferences());
-  };
-
-  // Find best deal (prioritize user's platforms)
-  const getBestDeal = () => {
+  const bestDeal = () => {
     const userPlatformIds = userPlatforms.map(p => p.id);
-
-    // Check if available on user's platforms
     const userProvider = streamingProviders.find(p => userPlatformIds.includes(p.provider_id));
     if (userProvider) return { provider: userProvider, type: 'stream', isUserPlatform: true };
-
-    // Otherwise, cheapest option
     if (streamingProviders.length > 0) return { provider: streamingProviders[0], type: 'stream', isUserPlatform: false };
-    if (rentProviders.length > 0) return { provider: rentProviders[0], type: 'rent', isUserPlatform: false };
-    if (buyProviders.length > 0) return { provider: buyProviders[0], type: 'buy', isUserPlatform: false };
-
     return null;
   };
 
-  const bestDeal = getBestDeal();
+  const currentBestDeal = bestDeal();
   const trailer = videos?.results?.find(
     (video) => video.type === 'Trailer' && video.site === 'YouTube'
   );
+
+  const embedUrl = contentType === 'tv' 
+    ? `https://www.vidking.net/embed/tv/${movieId}/${selectedSeason}/${selectedEpisode}?color=AB8BFF&autoPlay=true`
+    : `https://www.vidking.net/embed/movie/${movieId}?color=AB8BFF&autoPlay=true&progress=${getResumeTime(movieId)}`;
+
+  const title = details?.title || details?.name;
+  const releaseDate = details?.release_date || details?.first_air_date;
+  const runtime = details?.runtime || (details?.episode_run_time?.[0]);
 
   return (
     <div className="modal-backdrop" onClick={handleBackdropClick}>
@@ -192,9 +207,9 @@ const MovieDetails = ({ movieId, onClose }) => {
                     <div className="unavailable-message">
                       <div className="text-center p-8">
                         <span className="text-4xl mb-4 block">🎬</span>
-                        <h3 className="text-xl font-bold mb-2">Movie Not Found</h3>
+                        <h3 className="text-xl font-bold mb-2">{contentType === 'movie' ? 'Movie' : 'Web Series'} Not Found</h3>
                         <p className="text-gray-300 mb-4">
-                          This movie is not currently on our server, but we will add it soon!
+                          This content is not currently available on our server.
                         </p>
                         <button 
                           className="bg-light-100/10 hover:bg-light-100/20 px-4 py-2 rounded-lg text-sm transition-all"
@@ -206,8 +221,8 @@ const MovieDetails = ({ movieId, onClose }) => {
                     </div>
                   ) : (
                     <iframe
-                      src={`https://www.vidking.net/embed/movie/${movieId}?color=AB8BFF&autoPlay=true&progress=${getResumeTime(movieId)}`}
-                      title="Movie Player"
+                      src={embedUrl}
+                      title="Content Player"
                       frameBorder="0"
                       allowFullScreen
                       allow="autoplay; fullscreen"
@@ -220,25 +235,14 @@ const MovieDetails = ({ movieId, onClose }) => {
                   {details.backdrop_path && (
                     <img
                       src={`https://image.tmdb.org/t/p/original${details.backdrop_path}`}
-                      alt={details.title}
+                      alt={title}
                       className="modal-backdrop-img"
                     />
                   )}
-                  <div className="watch-now-overlay">
-                    <button 
-                      className="watch-now-btn"
-                      onClick={() => setIsPlaying(true)}
-                    >
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M8 5v14l11-7z" />
-                      </svg>
-                      Watch Now
-                    </button>
-                  </div>
                 </>
               )}
               <div className="modal-header-content">
-                <h2>{details.title}</h2>
+                <h2>{title}</h2>
                 {details.tagline && <p className="tagline">{details.tagline}</p>}
 
                 <div className="modal-meta">
@@ -247,9 +251,19 @@ const MovieDetails = ({ movieId, onClose }) => {
                     <span>{details.vote_average?.toFixed(1)}</span>
                   </div>
                   <span>•</span>
-                  <span>{details.release_date?.split('-')[0]}</span>
-                  <span>•</span>
-                  <span>{details.runtime} min</span>
+                  <span>{releaseDate?.split('-')[0]}</span>
+                  {runtime && (
+                    <>
+                      <span>•</span>
+                      <span>{runtime} min{contentType === 'tv' ? ' / ep' : ''}</span>
+                    </>
+                  )}
+                  {contentType === 'tv' && (
+                    <>
+                      <span>•</span>
+                      <span>{details.number_of_seasons} Seasons</span>
+                    </>
+                  )}
                 </div>
 
                 <div className="genres">
@@ -259,129 +273,75 @@ const MovieDetails = ({ movieId, onClose }) => {
                     </span>
                   ))}
                 </div>
+
+                {!isPlaying && (
+                  <button className="watch-main-btn" onClick={() => setIsPlaying(true)}>
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                    {contentType === 'movie' ? 'Watch Now' : `Play S${selectedSeason}:E${selectedEpisode}`}
+                  </button>
+                )}
               </div>
             </div>
 
-            {(streamingProviders.length > 0 || rentProviders.length > 0 || buyProviders.length > 0) && (
-              <section>
-                <h3>Where to Watch</h3>
-
-                {bestDeal && (
-                  <div className="best-deal-banner">
-                    <span className="best-deal-badge">🏆 Best Deal</span>
-                    <div className="best-deal-content">
-                      <img
-                        src={`https://image.tmdb.org/t/p/original${bestDeal.provider.logo_path}`}
-                        alt={bestDeal.provider.provider_name}
-                        className="best-deal-logo"
-                      />
-                      <div>
-                        <p className="best-deal-name">{bestDeal.provider.provider_name}</p>
-                        <p className="best-deal-type">
-                          {bestDeal.isUserPlatform
-                            ? '✨ Available on your platform'
-                            : `${bestDeal.type.charAt(0).toUpperCase() + bestDeal.type.slice(1)} available`}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {streamingProviders.length > 0 && (
-                  <div className="watch-section">
-                    <h4 className="watch-type">Stream</h4>
-                    <div className="providers-grid">
-                      {streamingProviders.map((provider) => (
-                        <div key={provider.provider_id} className="provider-card-wrapper">
-                          <a
-                            href={providers.link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={`provider-card ${hasPlatformPreference(provider.provider_id) ? 'user-platform' : ''}`}
-                            title={provider.provider_name}
-                          >
-                            {hasPlatformPreference(provider.provider_id) && (
-                              <span className="user-platform-badge">✓</span>
-                            )}
-                            <img
-                              src={`https://image.tmdb.org/t/p/original${provider.logo_path}`}
-                              alt={provider.provider_name}
-                            />
-                            <span>{provider.provider_name}</span>
-                            <span className="free-badge">Included</span>
-                          </a>
-                          <button
-                            className="platform-preference-btn"
-                            onClick={(e) => handlePlatformToggle(provider.provider_id, provider.provider_name, e)}
-                            title={hasPlatformPreference(provider.provider_id) ? 'Remove from my platforms' : 'Add to my platforms'}
-                          >
-                            {hasPlatformPreference(provider.provider_id) ? '⭐' : '☆'}
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {rentProviders.length > 0 && (
-                  <div className="watch-section">
-                    <h4 className="watch-type">Rent</h4>
-                    <div className="providers-grid">
-                      {rentProviders.map((provider) => (
-                        <div key={provider.provider_id} className="provider-card-wrapper">
-                          <a
-                            href={providers.link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="provider-card"
-                            title={provider.provider_name}
-                          >
-                            <img
-                              src={`https://image.tmdb.org/t/p/original${provider.logo_path}`}
-                              alt={provider.provider_name}
-                            />
-                            <span>{provider.provider_name}</span>
-                            <span className="rent-badge">Rental</span>
-                          </a>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {buyProviders.length > 0 && (
-                  <div className="watch-section">
-                    <h4 className="watch-type">Buy</h4>
-                    <div className="providers-grid">
-                      {buyProviders.map((provider) => (
-                        <div key={provider.provider_id} className="provider-card-wrapper">
-                          <a
-                            href={providers.link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="provider-card"
-                            title={provider.provider_name}
-                          >
-                            <img
-                              src={`https://image.tmdb.org/t/p/original${provider.logo_path}`}
-                              alt={provider.provider_name}
-                            />
-                            <span>{provider.provider_name}</span>
-                            <span className="buy-badge">Purchase</span>
-                          </a>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                <p className="provider-note">
-                  Availability may vary by region. Powered by JustWatch.
-                </p>
-              </section>
-            )}
-
             <div className="modal-sections">
+              {contentType === 'tv' && (
+                <section className="episodes-section">
+                  <div className="episodes-header">
+                    <h3>Episodes</h3>
+                    <div className="season-selector">
+                      {details.seasons?.filter(s => s.season_number > 0).map(season => (
+                        <button
+                          key={season.id}
+                          className={`season-tab ${selectedSeason === season.season_number ? 'active' : ''}`}
+                          onClick={() => setSelectedSeason(season.season_number)}
+                        >
+                          S{season.season_number}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {loadingEpisodes ? (
+                    <div className="flex justify-center py-10">
+                      <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full"></div>
+                    </div>
+                  ) : (
+                    <div className="episodes-grid">
+                      {episodes.map(episode => (
+                        <div 
+                          key={episode.id} 
+                          className={`episode-card ${selectedEpisode === episode.episode_number ? 'active' : ''}`}
+                          onClick={() => {
+                            setSelectedEpisode(episode.episode_number);
+                            setIsPlaying(true);
+                          }}
+                        >
+                          <div className="episode-thumb">
+                            <img 
+                              src={episode.still_path 
+                                ? `https://image.tmdb.org/t/p/w300${episode.still_path}`
+                                : details.backdrop_path ? `https://image.tmdb.org/t/p/w300${details.backdrop_path}` : '/no-movie.png'
+                              } 
+                              alt={episode.name} 
+                            />
+                            <div className="play-overlay">
+                              <svg width="32" height="32" viewBox="0 0 24 24" fill="white">
+                                <path d="M8 5v14l11-7z" />
+                              </svg>
+                            </div>
+                          </div>
+                          <div className="episode-info">
+                            <p className="ep-number">Episode {episode.episode_number}</p>
+                            <p className="ep-title">{episode.name}</p>
+                            {episode.overview && <p className="ep-overview">{episode.overview}</p>}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </section>
+              )}
+
               <section>
                 <h3>Overview</h3>
                 <p className="overview">{details.overview}</p>
@@ -393,7 +353,7 @@ const MovieDetails = ({ movieId, onClose }) => {
                   <div className="trailer-container">
                     <iframe
                       src={`https://www.youtube.com/embed/${trailer.key}`}
-                      title="Movie Trailer"
+                      title="Trailer"
                       frameBorder="0"
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                       allowFullScreen
@@ -423,29 +383,10 @@ const MovieDetails = ({ movieId, onClose }) => {
                   </div>
                 </section>
               )}
-
-              <section className="additional-info">
-                <div>
-                  <h4>Budget</h4>
-                  <p>{details.budget ? `$${details.budget.toLocaleString()}` : 'N/A'}</p>
-                </div>
-                <div>
-                  <h4>Revenue</h4>
-                  <p>{details.revenue ? `$${details.revenue.toLocaleString()}` : 'N/A'}</p>
-                </div>
-                <div>
-                  <h4>Status</h4>
-                  <p>{details.status}</p>
-                </div>
-                <div>
-                  <h4>Original Language</h4>
-                  <p>{details.original_language?.toUpperCase()}</p>
-                </div>
-              </section>
             </div>
           </div>
         ) : (
-          <p className="text-center text-gray-200">Failed to load movie details</p>
+          <p className="text-center text-gray-200">Failed to load details</p>
         )}
       </div>
     </div>

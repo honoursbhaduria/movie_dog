@@ -168,9 +168,14 @@
     }
   }
 
-  .search {
-    @apply w-full bg-light-100/5 px-4 py-3 rounded-lg mt-10 max-w-3xl mx-auto;
+  /* ── Search Container & Filters ── */
+  .search-container {
+    @apply w-full max-w-3xl mx-auto mt-10;
+  }
 
+  .search {
+    @apply w-full bg-light-100/5 px-4 py-3 rounded-lg;
+    
     & div {
       @apply relative flex items-center;
     }
@@ -182,6 +187,40 @@
     & input {
       @apply w-full bg-transparent py-2 sm:pr-10 pl-10 text-base text-gray-200 placeholder-light-200 outline-hidden;
       padding-right: 4.5rem;
+    }
+  }
+
+  .filters {
+    @apply flex flex-wrap items-center justify-center gap-4 mt-6;
+  }
+
+  .filter-group {
+    @apply flex bg-light-100/5 rounded-lg p-1 border border-light-100/10;
+  }
+
+  .filter-btn {
+    @apply px-4 py-1.5 rounded-md text-sm font-semibold transition-all text-light-200 hover:text-white;
+
+    &.active {
+      @apply bg-light-100/10 text-white shadow-sm;
+      background: linear-gradient(135deg, rgba(171, 139, 255, 0.2) 0%, rgba(124, 92, 252, 0.2) 100%);
+      border: 1px solid rgba(171, 139, 255, 0.3);
+    }
+  }
+
+  .filter-select {
+    @apply px-4 py-1.5 rounded-md text-sm font-semibold transition-all text-white shadow-sm outline-hidden cursor-pointer hover:opacity-90;
+    background: linear-gradient(135deg, rgba(171, 139, 255, 0.2) 0%, rgba(124, 92, 252, 0.2) 100%);
+    border: 1px solid rgba(171, 139, 255, 0.3);
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e"), linear-gradient(135deg, rgba(171, 139, 255, 0.2) 0%, rgba(124, 92, 252, 0.2) 100%);
+    background-repeat: no-repeat, no-repeat;
+    background-position: right 0.5rem center, 0 0;
+    background-size: 1em, auto;
+    padding-right: 2rem;
+    
+    option {
+      @apply bg-dark-100 text-white;
     }
   }
 
@@ -346,15 +385,6 @@
     }
   }
 
-  .watch-now-overlay {
-    @apply absolute inset-0 flex items-center justify-center bg-black/40 rounded-t-2xl opacity-0 hover:opacity-100 transition-opacity duration-300;
-  }
-
-  .watch-now-btn {
-    @apply flex items-center gap-2 bg-primary px-8 py-3 rounded-full text-white font-bold text-lg transform hover:scale-105 transition-all shadow-lg;
-    background: linear-gradient(135deg, #AB8BFF 0%, #7C5CFC 100%);
-  }
-
   .modal-header-content {
     @apply p-6;
     background: linear-gradient(to top, #0f0d23, transparent);
@@ -510,8 +540,88 @@
     }
   }
 
-  .providers-grid {
-    @apply flex flex-wrap gap-4;
+  /* ── Enhanced TV Episode Selection ── */
+  .episodes-section {
+    @apply mt-8 border-t border-light-100/10 pt-8;
+  }
+
+  .episodes-header {
+    @apply flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6;
+  }
+
+  .season-selector {
+    @apply flex items-center gap-3 bg-light-100/5 p-1 rounded-xl border border-light-100/10;
+  }
+
+  .season-tab {
+    @apply px-4 py-2 rounded-lg text-sm font-bold transition-all text-light-200 hover:text-white;
+
+    &.active {
+      @apply bg-light-100/10 text-white shadow-sm;
+      background: linear-gradient(135deg, rgba(171, 139, 255, 0.2) 0%, rgba(124, 92, 252, 0.2) 100%);
+      border: 1px solid rgba(171, 139, 255, 0.3);
+    }
+  }
+
+  .episodes-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4;
+  }
+
+  .episode-card {
+    @apply flex flex-col bg-light-100/5 rounded-xl border border-light-100/10 overflow-hidden cursor-pointer transition-all hover:bg-light-100/10 hover:border-light-100/20;
+
+    &.active {
+      @apply border-primary ring-2 ring-primary/30 bg-primary/5;
+    }
+  }
+
+  .episode-thumb {
+    @apply relative aspect-video w-full overflow-hidden;
+
+    img {
+      @apply w-full h-full object-cover;
+    }
+
+    .play-overlay {
+      @apply absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 transition-opacity;
+    }
+  }
+
+  .episode-card:hover .play-overlay {
+    @apply opacity-100;
+  }
+
+  .episode-card.active .play-overlay {
+    @apply opacity-100;
+  }
+
+  .episode-info {
+    @apply p-3;
+
+    .ep-number {
+      @apply text-xs font-bold text-primary mb-1 uppercase tracking-wider;
+    }
+
+    .ep-title {
+      @apply text-sm font-bold text-white line-clamp-1;
+    }
+
+    .ep-overview {
+      @apply text-xs text-gray-200 line-clamp-2 mt-1 leading-relaxed;
+    }
+  }
+
+  .watch-main-btn {
+    @apply flex items-center justify-center gap-2 w-full py-4 rounded-xl text-white font-bold text-lg transition-all shadow-lg mt-4;
+    background: linear-gradient(135deg, #AB8BFF 0%, #7C5CFC 100%);
+    
+    &:hover {
+      @apply scale-[1.02] shadow-primary/20;
+    }
+
+    svg {
+      @apply size-6;
+    }
   }
 
   .provider-card-wrapper {
