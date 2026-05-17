@@ -51,6 +51,7 @@ const App = () => {
   const [authUser, setAuthUser] = useState(null);
   const [chatbotOpen, setChatbotOpen] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showAuthMenu, setShowAuthMenu] = useState(false);
 
   // Reactive auth state listener
   useEffect(() => {
@@ -252,17 +253,54 @@ const App = () => {
                 )}
               </div>
             ) : (
-              <>
-                <button
-                  className="wishlist-btn"
-                  onClick={() => setShowWishlist(true)}
-                  title="View Wishlist"
-                >
-                  My Favorites
-                </button>
-                <Link to="/login" className="wishlist-btn" style={{ marginLeft: 12 }}>Login</Link>
-                <Link to="/register" className="auth-register-btn" style={{ marginLeft: 8 }}>Register</Link>
-              </>
+              <div className="profile-menu-container">
+                <div className="desktop-only flex items-center gap-3">
+                  <button
+                    className="wishlist-btn"
+                    onClick={() => setShowWishlist(true)}
+                    title="View Wishlist"
+                  >
+                    My Favorites
+                  </button>
+                  <Link to="/login" className="wishlist-btn">Login</Link>
+                  <Link to="/register" className="auth-register-btn">Register</Link>
+                </div>
+
+                <div className="mobile-only">
+                  <button
+                    className="user-badge user-badge--icon-only profile-toggle-btn"
+                    onClick={() => setShowAuthMenu(!showAuthMenu)}
+                    aria-expanded={showAuthMenu}
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-light-200">
+                      <circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/>
+                    </svg>
+                  </button>
+
+                  {showAuthMenu && (
+                    <div className="profile-dropdown">
+                      <button
+                        className="dropdown-item"
+                        onClick={() => {
+                          setShowWishlist(true);
+                          setShowAuthMenu(false);
+                        }}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                        My Favorites
+                      </button>
+                      <Link to="/login" className="dropdown-item" onClick={() => setShowAuthMenu(false)}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M13.8 12H3"/></svg>
+                        Login
+                      </Link>
+                      <Link to="/register" className="dropdown-item" onClick={() => setShowAuthMenu(false)}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+                        Register
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              </div>
             )}
           </div>
 
@@ -290,7 +328,7 @@ const App = () => {
 
             <ul>
               {trendingMovies.map((movie, index) => (
-                <li key={movie.$id}>
+                <li key={movie.$id} onClick={() => setSelectedContent({ id: movie.$id, type: contentType })} className="cursor-pointer">
                   <p>{index + 1}</p>
                   <img src={movie.poster_url} alt={movie.title} />
                 </li>

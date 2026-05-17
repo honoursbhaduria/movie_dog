@@ -20,6 +20,7 @@ const MovieCard = ({ movie, onClick }) => {
         src={poster_path ?
           `https://image.tmdb.org/t/p/w500/${poster_path}` : '/no-movie.png'}
         alt={displayTitle}
+        loading="lazy"
       />
 
       <div className="mt-4">

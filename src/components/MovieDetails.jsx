@@ -178,9 +178,9 @@ const MovieDetails = ({ movieId, contentType = 'movie', onClose }) => {
         <button
           className={`wishlist-toggle-btn ${inWishlist ? 'in-wishlist' : ''}`}
           onClick={toggleWishlist}
-          title={inWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
+          title={inWishlist ? 'Remove from favorites' : 'Add to favorites'}
         >
-          {inWishlist ? 'Remove from Favorites' : 'Add to Favorites'}
+          {inWishlist ? 'Saved' : 'Save'}
         </button>
 
         <button className="modal-close" onClick={onClose}>

@@ -28,11 +28,11 @@
   }
 
   h1 {
-    @apply mx-auto max-w-4xl text-center text-5xl font-bold leading-tight tracking-[-1%] text-white sm:text-[64px] sm:leading-[76px];
+    @apply mx-auto max-w-4xl text-center text-3xl font-bold leading-tight tracking-[-1%] text-white sm:text-[64px] sm:leading-[76px];
   }
 
   h2 {
-    @apply text-2xl font-bold text-white sm:text-3xl;
+    @apply text-xl font-bold text-white sm:text-3xl;
   }
 
   main {
@@ -72,6 +72,12 @@
 
   .user-badge:hover {
     background: rgba(206, 206, 251, 0.12);
+  }
+
+  .user-badge--icon-only {
+    padding: 0.25rem !important;
+    width: 2.5rem;
+    justify-content: center;
   }
 
   .user-avatar {
@@ -185,7 +191,7 @@
     }
 
     & input {
-      @apply w-full bg-transparent py-2 sm:pr-10 pl-10 text-base text-gray-200 placeholder-light-200 outline-hidden;
+      @apply w-full bg-transparent py-2 sm:pr-10 pl-10 text-sm sm:text-base text-gray-200 placeholder-light-200 outline-hidden;
       padding-right: 4.5rem;
     }
   }
@@ -276,12 +282,12 @@
     @apply space-y-9;
 
     & ul {
-      @apply grid grid-cols-1 gap-5 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4;
+      @apply grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5;
     }
   }
 
   .movie-card {
-    @apply bg-dark-100 p-4 rounded-xl shadow-sm;
+    @apply bg-dark-100 p-3 sm:p-4 rounded-xl shadow-sm;
 
     cursor: pointer;
     transition: transform 0.18s ease, box-shadow 0.18s ease;
@@ -293,15 +299,15 @@
     }
 
     & img {
-      @apply rounded-lg h-auto w-full;
+      @apply rounded-lg h-auto w-full aspect-[2/3] object-cover;
     }
 
     & h3 {
-      @apply text-white font-bold text-base line-clamp-1;
+      @apply text-white font-bold text-sm sm:text-base line-clamp-1;
     }
 
     & .content {
-      @apply mt-2 flex flex-row items-center flex-wrap gap-2;
+      @apply mt-2 flex flex-row items-center flex-wrap gap-1.5 sm:gap-2;
     }
 
     & .rating {
@@ -309,23 +315,23 @@
     }
 
     & .rating img {
-      @apply size-4 object-contain;
+      @apply size-3.5 sm:size-4 object-contain;
     }
 
     & .rating p {
-      @apply font-bold text-base text-white;
+      @apply font-bold text-sm sm:text-base text-white;
     }
 
     & .content span {
-      @apply text-sm text-gray-100;
+      @apply text-xs sm:text-sm text-gray-100;
     }
 
     & .content .lang {
-      @apply capitalize text-gray-100 font-medium text-base;
+      @apply capitalize text-gray-100 font-medium text-xs sm:text-base;
     }
 
     & .content .year {
-      @apply text-gray-100 font-medium text-base;
+      @apply text-gray-100 font-medium text-xs sm:text-base;
     }
   }
 
@@ -345,11 +351,11 @@
   }
 
   .modal-close {
-    @apply absolute top-4 right-4 text-white text-4xl w-10 h-10 flex items-center justify-center bg-light-100/10 rounded-full hover:bg-light-100/20 transition-all z-10;
+    @apply absolute top-4 right-4 text-white text-2xl sm:text-4xl w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center bg-light-100/10 rounded-full hover:bg-light-100/20 transition-all z-10;
   }
 
   .wishlist-toggle-btn {
-    @apply absolute top-4 left-4 text-white text-sm font-semibold px-4 py-2 flex items-center justify-center bg-light-100/10 rounded-lg hover:bg-light-100/20 transition-all z-10;
+    @apply absolute top-4 left-4 text-white text-xs sm:text-sm font-semibold px-3 py-1.5 sm:px-4 sm:py-2 flex items-center justify-center bg-light-100/10 rounded-lg hover:bg-light-100/20 transition-all z-10;
 
     &.in-wishlist {
       @apply bg-red-500/20 hover:bg-red-500/30;
@@ -518,7 +524,7 @@
   }
 
   .wishlist-grid {
-    @apply grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5;
+    @apply grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5;
   }
 
   .wishlist-item {
@@ -2235,9 +2241,15 @@
     background: rgba(239, 68, 68, 0.08);
   }
 
-  @media (max-width: 480px) {
+  @media (max-width: 640px) {
     .desktop-only {
-      display: none;
+      display: none !important;
+    }
+  }
+
+  @media (min-width: 641px) {
+    .mobile-only {
+      display: none !important;
     }
   }
 }

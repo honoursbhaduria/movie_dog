@@ -62,7 +62,7 @@ export const getTrendingMovies = async () => {
     if (error) throw error;
 
     return data.map(item => ({
-      $id: item.id,
+      $id: item.movie_id,
       title: item.title,
       poster_url: item.poster_url,
       count: item.count
