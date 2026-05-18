@@ -3,8 +3,16 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
-// Check if Supabase is configured
-const isSupabaseConfigured = supabaseUrl && supabaseAnonKey && supabaseAnonKey !== 'your_anon_key_here';
+// Check if Supabase is configured and valid
+const isSupabaseConfigured = 
+  supabaseUrl && 
+  supabaseAnonKey && 
+  supabaseAnonKey !== 'your_anon_key_here' &&
+  !supabaseUrl.includes('wjaiyyzxnloyasyprqqv'); // Guard against the known invalid URL
+
+if (supabaseUrl.includes('wjaiyyzxnloyasyprqqv')) {
+  console.error('❌ ACTION REQUIRED: The current Supabase URL is invalid or deleted. Please update your Vercel Environment Variables with a valid project URL.');
+}
 
 let supabase = null;
 

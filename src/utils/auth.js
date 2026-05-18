@@ -38,7 +38,10 @@ export const initAuthListener = (onChange = () => { }) => {
  */
 export const register = async (name, email, password) => {
   if (!supabase) {
-    return { ok: false, message: 'Supabase is not configured.' };
+    return { 
+      ok: false, 
+      message: 'Authentication is currently unavailable. Please check the project configuration (Supabase URL/Key).' 
+    };
   }
 
   try {
@@ -74,7 +77,10 @@ export const register = async (name, email, password) => {
  */
 export const login = async (email, password) => {
   if (!supabase) {
-    return { ok: false, message: 'Supabase is not configured.' };
+    return { 
+      ok: false, 
+      message: 'Authentication is currently unavailable. Please check the project configuration (Supabase URL/Key).' 
+    };
   }
 
   try {
