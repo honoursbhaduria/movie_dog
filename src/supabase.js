@@ -12,6 +12,9 @@ if (isSupabaseConfigured) {
   supabase = createClient(supabaseUrl, supabaseAnonKey);
 }
 
+export { supabase };
+export default supabase;
+
 export const updateSearchCount = async (searchTerm, movie) => {
   if (!isSupabaseConfigured || !supabase) return;
 

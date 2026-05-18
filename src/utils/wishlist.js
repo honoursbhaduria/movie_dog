@@ -1,16 +1,7 @@
 // Wishlist/Favorites utility — Supabase for logged-in users, localStorage fallback
 
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../supabase';
 import { getUser, isAuthenticated } from './auth';
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-
-const isConfigured = supabaseUrl && supabaseKey && supabaseKey !== 'your_anon_key_here';
-let supabase = null;
-if (isConfigured) {
-  supabase = createClient(supabaseUrl, supabaseKey);
-}
 
 // ═══════════════════════════════════════════
 // Core CRUD — async, works with both backends

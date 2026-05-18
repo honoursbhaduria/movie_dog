@@ -1,15 +1,6 @@
 // Auth utility — Supabase Auth (supports email/password + Google OAuth)
 
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-
-const isConfigured = supabaseUrl && supabaseKey && supabaseKey !== 'your_anon_key_here';
-let supabase = null;
-if (isConfigured) {
-  supabase = createClient(supabaseUrl, supabaseKey);
-}
+import { supabase } from '../supabase';
 
 /** Return the shared Supabase client (used by AuthCallback). */
 export const getSupabase = () => supabase;
