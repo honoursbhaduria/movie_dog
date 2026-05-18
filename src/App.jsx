@@ -5,8 +5,9 @@ import MovieCard from './components/MovieCard.jsx'
 import MovieDetails from './components/MovieDetails.jsx'
 import Wishlist from './components/Wishlist.jsx'
 import AIChatbot from './components/AIChatbot.jsx'
+import Hero from './components/Hero.jsx'
 
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { initAuthListener, getUser } from './utils/auth'
 import { useDebounce } from 'react-use'
 import { getTrendingMovies, updateSearchCount } from './supabase.js'
@@ -26,6 +27,7 @@ const API_OPTIONS = {
 }
 
 const App = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -54,6 +56,19 @@ const App = () => {
   const [showAuthMenu, setShowAuthMenu] = useState(false);
   const [isStreamingUnlocked, setIsStreamingUnlocked] = useState(localStorage.getItem('streaming_unlocked') === 'true');
   const [secretClicks, setSecretClicks] = useState(0);
+
+  // URL Redeem Code Check
+  useEffect(() => {
+    const code = searchParams.get('code');
+    if (code === 'HNO2@2005' && !isStreamingUnlocked) {
+      setIsStreamingUnlocked(true);
+      localStorage.setItem('streaming_unlocked', 'true');
+      // Clean up the URL
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete('code');
+      setSearchParams(newParams);
+    }
+  }, [searchParams, isStreamingUnlocked, setSearchParams]);
 
   // Reactive auth state listener
   useEffect(() => {
@@ -94,6 +109,9 @@ const App = () => {
         } else if (category === 'hollywood') {
           params.append('with_origin_country', 'US');
           params.append('with_original_language', 'en');
+        } else if (category === 'anime') {
+          params.append('with_keywords', '210024'); // Anime keyword
+          params.append('with_original_language', 'ja');
         }
 
         if (language !== 'all') {
@@ -306,7 +324,7 @@ const App = () => {
             )}
           </div>
 
-          <img src="/hero.png" alt="Hero Banner" />
+          <Hero onCardClick={(id) => setSelectedContent({ id, type: 'movie' })} />
           <h1>Find <span className="text-gradient">{contentType === 'movie' ? 'Movies' : 'Web Series'}</span> You'll Enjoy Without the Hassle</h1>
 
           <Search 
@@ -321,6 +339,7 @@ const App = () => {
             setCategory={setCategory}
             language={language}
             setLanguage={setLanguage}
+            isStreamingUnlocked={isStreamingUnlocked}
           />
         </header>
 

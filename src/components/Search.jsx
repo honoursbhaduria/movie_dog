@@ -11,7 +11,8 @@ const Search = ({
   category,
   setCategory,
   language,
-  setLanguage
+  setLanguage,
+  isStreamingUnlocked
 }) => {
   return (
     <div className="search-container">
@@ -80,6 +81,14 @@ const Search = ({
           >
             Hollywood
           </button>
+          {isStreamingUnlocked && (
+            <button 
+              className={`filter-btn ${category === 'anime' ? 'active' : ''}`}
+              onClick={() => setCategory('anime')}
+            >
+              Anime
+            </button>
+          )}
         </div>
 
         <div className="filter-group">
