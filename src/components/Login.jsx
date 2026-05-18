@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { login, loginWithGoogle, verifyEmailOtp } from '../utils/auth';
+import { login, loginWithGoogle } from '../utils/auth';
 
 const Login = () => {
     const navigate = useNavigate();
@@ -11,8 +11,6 @@ const Login = () => {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
-    const [isVerifying, setIsVerifying] = useState(location.state?.isVerifying || false);
-    const [otp, setOtp] = useState('');
 
     // Flash message from registration redirect
     const successMsg = location.state?.message || '';
@@ -35,36 +33,10 @@ const Login = () => {
 
         if (!result.ok) {
             setError(result.message);
-            if (result.message.toLowerCase().includes('not confirmed')) {
-                // optionally switch to verifying state automatically if we know they need to verify
-            }
             setLoading(false);
             return;
         }
 
-        navigate('/', { replace: true });
-    };
-
-    const handleVerify = async (e) => {
-        e.preventDefault();
-        setError('');
-
-        if (!email.trim() || !otp.trim()) {
-            setError('Please enter your email and the 6-digit verification code.');
-            return;
-        }
-
-        setLoading(true);
-
-        const result = await verifyEmailOtp(email, otp);
-
-        if (!result.ok) {
-            setError(result.message);
-            setLoading(false);
-            return;
-        }
-
-        // Redirect on successful verification (which logs them in)
         navigate('/', { replace: true });
     };
 
@@ -93,149 +65,88 @@ const Login = () => {
                     <form className="auth-card" onSubmit={handleSubmit} noValidate>
                         <div className="auth-card-header">
                             <img src="/hero.png" alt="Logo" className="auth-logo-small" />
-                            <h1 className="auth-title">{isVerifying ? 'Verify Email' : 'Sign In'}</h1>
-                            <p className="auth-subtitle">
-                                {isVerifying
-                                    ? 'Enter the 6-digit code sent to your email'
-                                    : 'Enter your credentials to continue'}
-                            </p>
+                            <h1 className="auth-title">Sign In</h1>
+                            <p className="auth-subtitle">Enter your credentials to continue</p>
                         </div>
 
-                        {successMsg && !isVerifying && <div className="auth-toast auth-toast--success">{successMsg}</div>}
+                        {successMsg && <div className="auth-toast auth-toast--success">{successMsg}</div>}
                         {error && <div className="auth-toast auth-toast--error">{error}</div>}
 
-                        {!isVerifying ? (
-                            <>
-                                {/* ─── Google OAuth Button ─── */}
+                        {/* ─── Google OAuth Button ─── */}
+                        <button
+                            type="button"
+                            className="auth-google-btn"
+                            onClick={handleGoogleLogin}
+                        >
+                            <svg className="auth-google-icon" viewBox="0 0 24 24" width="20" height="20">
+                                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
+                                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+                                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+                            </svg>
+                            Sign in with Google
+                        </button>
+
+                        {/* ─── Divider ─── */}
+                        <div className="auth-divider">
+                            <span>or</span>
+                        </div>
+
+                        <div className="auth-field">
+                            <label htmlFor="login-email">Email Address</label>
+                            <div className="auth-input-wrap">
+                                <svg className="auth-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="4" width="20" height="16" rx="3" /><path d="M22 7l-10 7L2 7" /></svg>
+                                <input
+                                    id="login-email"
+                                    type="email"
+                                    placeholder="you@example.com"
+                                    value={email}
+                                    onChange={e => setEmail(e.target.value)}
+                                    autoComplete="email"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="auth-field">
+                            <label htmlFor="login-password">Password</label>
+                            <div className="auth-input-wrap">
+                                <svg className="auth-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M7 11V7a5 5 0 0110 0v4" /></svg>
+                                <input
+                                    id="login-password"
+                                    type={showPassword ? 'text' : 'password'}
+                                    placeholder="••••••••"
+                                    value={password}
+                                    onChange={e => setPassword(e.target.value)}
+                                    autoComplete="current-password"
+                                />
                                 <button
                                     type="button"
-                                    className="auth-google-btn"
-                                    onClick={handleGoogleLogin}
+                                    className="auth-toggle-pw"
+                                    onClick={() => setShowPassword(v => !v)}
+                                    tabIndex={-1}
+                                    aria-label={showPassword ? 'Hide password' : 'Show password'}
                                 >
-                                    <svg className="auth-google-icon" viewBox="0 0 24 24" width="20" height="20">
-                                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
-                                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
-                                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
-                                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
-                                    </svg>
-                                    Sign in with Google
-                                </button>
-
-                                {/* ─── Divider ─── */}
-                                <div className="auth-divider">
-                                    <span>or</span>
-                                </div>
-
-                                <div className="auth-field">
-                                    <label htmlFor="login-email">Email Address</label>
-                                    <div className="auth-input-wrap">
-                                        <svg className="auth-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="4" width="20" height="16" rx="3" /><path d="M22 7l-10 7L2 7" /></svg>
-                                        <input
-                                            id="login-email"
-                                            type="email"
-                                            placeholder="you@example.com"
-                                            value={email}
-                                            onChange={e => setEmail(e.target.value)}
-                                            autoComplete="email"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="auth-field">
-                                    <label htmlFor="login-password">Password</label>
-                                    <div className="auth-input-wrap">
-                                        <svg className="auth-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M7 11V7a5 5 0 0110 0v4" /></svg>
-                                        <input
-                                            id="login-password"
-                                            type={showPassword ? 'text' : 'password'}
-                                            placeholder="••••••••"
-                                            value={password}
-                                            onChange={e => setPassword(e.target.value)}
-                                            autoComplete="current-password"
-                                        />
-                                        <button
-                                            type="button"
-                                            className="auth-toggle-pw"
-                                            onClick={() => setShowPassword(v => !v)}
-                                            tabIndex={-1}
-                                            aria-label={showPassword ? 'Hide password' : 'Show password'}
-                                        >
-                                            {showPassword ? (
-                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94" /><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19" /><line x1="1" y1="1" x2="23" y2="23" /></svg>
-                                            ) : (
-                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z" /><circle cx="12" cy="12" r="3" /></svg>
-                                            )}
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <button type="button" className="auth-btn" disabled={loading} onClick={handleSubmit}>
-                                    {loading ? (
-                                        <span className="auth-btn-loader" />
+                                    {showPassword ? (
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94" /><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19" /><line x1="1" y1="1" x2="23" y2="23" /></svg>
                                     ) : (
-                                        'Sign In'
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z" /><circle cx="12" cy="12" r="3" /></svg>
                                     )}
                                 </button>
+                            </div>
+                        </div>
 
-                                <p className="auth-footer" style={{ marginTop: '1rem' }}>
-                                    Need to confirm your email?{' '}
-                                    <button type="button" onClick={() => setIsVerifying(true)} style={{ background: 'none', border: 'none', color: '#B99AFF', cursor: 'pointer', textDecoration: 'underline', padding: 0, font: 'inherit' }}>
-                                        Enter Code
-                                    </button>
-                                </p>
+                        <button type="button" className="auth-btn" disabled={loading} onClick={handleSubmit}>
+                            {loading ? (
+                                <span className="auth-btn-loader" />
+                            ) : (
+                                'Sign In'
+                            )}
+                        </button>
 
-                                <p className="auth-footer">
-                                    Don't have an account?{' '}
-                                    <Link to="/register">Create one</Link>
-                                </p>
-                            </>
-                        ) : (
-                            <>
-                                <div className="auth-field">
-                                    <label htmlFor="verify-email">Email Address</label>
-                                    <div className="auth-input-wrap">
-                                        <svg className="auth-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="4" width="20" height="16" rx="3" /><path d="M22 7l-10 7L2 7" /></svg>
-                                        <input
-                                            id="verify-email"
-                                            type="email"
-                                            placeholder="you@example.com"
-                                            value={email}
-                                            onChange={e => setEmail(e.target.value)}
-                                            autoComplete="email"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="auth-field">
-                                    <label htmlFor="verify-otp">6-Digit Code</label>
-                                    <div className="auth-input-wrap">
-                                        <svg className="auth-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
-                                        <input
-                                            id="verify-otp"
-                                            type="text"
-                                            placeholder="123456"
-                                            value={otp}
-                                            onChange={e => setOtp(e.target.value)}
-                                            maxLength={6}
-                                        />
-                                    </div>
-                                </div>
-
-                                <button type="button" className="auth-btn" disabled={loading} onClick={handleVerify}>
-                                    {loading ? (
-                                        <span className="auth-btn-loader" />
-                                    ) : (
-                                        'Verify Account'
-                                    )}
-                                </button>
-
-                                <p className="auth-footer" style={{ marginTop: '1rem' }}>
-                                    <button type="button" onClick={() => setIsVerifying(false)} style={{ background: 'none', border: 'none', color: '#B99AFF', cursor: 'pointer', textDecoration: 'underline', padding: 0, font: 'inherit' }}>
-                                        Back to Sign In
-                                    </button>
-                                </p>
-                            </>
-                        )}
+                        <p className="auth-footer">
+                            Don't have an account?{' '}
+                            <Link to="/register">Create one</Link>
+                        </p>
 
                         <div className="auth-benefits">
                             <p className="auth-benefits-title">What you'll unlock</p>

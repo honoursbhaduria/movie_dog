@@ -56,7 +56,15 @@ const Register = () => {
             return;
         }
 
-        navigate('/login', { state: { message: 'Account created! Please enter the 6-digit confirmation code sent to your email.', isVerifying: true }, replace: true });
+        // If the user is already logged in (email confirmation disabled in Supabase), redirect to home
+        if (result.session) {
+            navigate('/', { replace: true });
+        } else {
+            navigate('/login', { 
+                state: { message: 'Account created! Please check your email for a confirmation link to activate your account.' }, 
+                replace: true 
+            });
+        }
     };
 
     const handleGoogleSignup = async () => {

@@ -24,7 +24,7 @@ const API_OPTIONS = {
   }
 }
 
-const MovieDetails = ({ movieId, contentType = 'movie', onClose }) => {
+const MovieDetails = ({ movieId, contentType = 'movie', onClose, isStreamingUnlocked = false }) => {
   const [details, setDetails] = useState(null);
   const [credits, setCredits] = useState(null);
   const [videos, setVideos] = useState(null);
@@ -138,7 +138,14 @@ const MovieDetails = ({ movieId, contentType = 'movie', onClose }) => {
     }
   };
 
-  const providers = watchProviders?.results?.US;
+  // Improved region-aware provider detection
+  const getRegionalProviders = () => {
+    if (!watchProviders?.results) return null;
+    const res = watchProviders.results;
+    return res.IN || res.US || res.GB || res.CA || Object.values(res)[0];
+  };
+
+  const providers = getRegionalProviders();
   const streamingProviders = providers?.flatrate || [];
 
   const toggleWishlist = async () => {
@@ -194,7 +201,7 @@ const MovieDetails = ({ movieId, contentType = 'movie', onClose }) => {
         ) : details ? (
           <div className="modal-body">
             <div className="modal-header">
-              {isPlaying ? (
+              {isPlaying && isStreamingUnlocked ? (
                 <div className="streaming-container">
                   <button 
                     className="close-player-btn"
@@ -274,7 +281,7 @@ const MovieDetails = ({ movieId, contentType = 'movie', onClose }) => {
                   ))}
                 </div>
 
-                {!isPlaying && (
+                {!isPlaying && isStreamingUnlocked && (
                   <button className="watch-main-btn" onClick={() => setIsPlaying(true)}>
                     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
                     {contentType === 'movie' ? 'Watch Now' : `Play S${selectedSeason}:E${selectedEpisode}`}
@@ -284,7 +291,7 @@ const MovieDetails = ({ movieId, contentType = 'movie', onClose }) => {
             </div>
 
             <div className="modal-sections">
-              {contentType === 'tv' && (
+              {contentType === 'tv' && isStreamingUnlocked && (
                 <section className="episodes-section">
                   <div className="episodes-header">
                     <h3>Episodes</h3>
@@ -346,6 +353,35 @@ const MovieDetails = ({ movieId, contentType = 'movie', onClose }) => {
                 <h3>Overview</h3>
                 <p className="overview">{details.overview}</p>
               </section>
+
+              { (providers?.flatrate || providers?.rent || providers?.buy) && (
+                <section>
+                  <h3>Where to Watch</h3>
+                  <div className="flex flex-wrap gap-4 mt-4">
+                    {providers.flatrate?.map((provider) => (
+                      <div key={provider.provider_id} className="provider-card">
+                        <img 
+                          src={`https://image.tmdb.org/t/p/original${provider.logo_path}`} 
+                          alt={provider.provider_name} 
+                        />
+                        <span>{provider.provider_name}</span>
+                        <span className="free-badge">Stream</span>
+                      </div>
+                    ))}
+                    {providers.rent?.map((provider) => (
+                      <div key={provider.provider_id} className="provider-card">
+                        <img 
+                          src={`https://image.tmdb.org/t/p/original${provider.logo_path}`} 
+                          alt={provider.provider_name} 
+                        />
+                        <span>{provider.provider_name}</span>
+                        <span className="rent-badge">Rent</span>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="provider-note">Available providers may vary by region.</p>
+                </section>
+              )}
 
               {trailer && (
                 <section>

@@ -63,12 +63,13 @@ export const register = async (name, email, password) => {
 
     return {
       ok: true,
-      message: 'Account created successfully! Check your email to confirm.',
+      message: 'Account created successfully! Please check your email and click the confirmation link to sign in.',
       user: {
         id: data.user?.id,
         name,
         email: data.user?.email,
       },
+      session: data.session,
     };
   } catch (err) {
     console.error('Register error:', err);

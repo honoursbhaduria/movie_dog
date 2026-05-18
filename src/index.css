@@ -1515,34 +1515,19 @@
     color: white;
     transition: transform 0.2s ease;
     padding: 0;
+  }
+
+  .chatbot-fab--glow {
     filter: drop-shadow(0 0 12px rgba(171, 139, 255, 0.7)) drop-shadow(0 0 30px rgba(171, 139, 255, 0.4));
     animation: fabGlow 2.5s ease-in-out infinite;
   }
 
   @keyframes fabGlow {
-
-    0%,
-    100% {
+    0%, 100% {
       filter: drop-shadow(0 0 12px rgba(171, 139, 255, 0.7)) drop-shadow(0 0 30px rgba(171, 139, 255, 0.4));
     }
-
     50% {
       filter: drop-shadow(0 0 20px rgba(171, 139, 255, 1)) drop-shadow(0 0 50px rgba(171, 139, 255, 0.6));
-    }
-  }
-
-
-
-
-  @keyframes fabPulse {
-
-    0%,
-    100% {
-      box-shadow: 0 4px 24px rgba(171, 139, 255, 0.4), 0 0 40px rgba(171, 139, 255, 0.15);
-    }
-
-    50% {
-      box-shadow: 0 4px 32px rgba(171, 139, 255, 0.55), 0 0 60px rgba(171, 139, 255, 0.25);
     }
   }
 
@@ -2271,4 +2256,18 @@
   &::-webkit-scrollbar {
     display: none;
   }
+}
+
+.footer {
+  @apply mt-20 py-10 border-t border-light-100/10 text-gray-200 text-sm;
+}
+
+.hidden-btn {
+  @apply bg-yellow-400 text-primary font-bold rounded-lg px-5 py-2.5 transition-all hover:scale-105;
+  opacity: 0;
+  cursor: default;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  box-shadow: none;
 }

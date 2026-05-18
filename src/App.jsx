@@ -52,6 +52,8 @@ const App = () => {
   const [chatbotOpen, setChatbotOpen] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showAuthMenu, setShowAuthMenu] = useState(false);
+  const [isStreamingUnlocked, setIsStreamingUnlocked] = useState(localStorage.getItem('streaming_unlocked') === 'true');
+  const [secretClicks, setSecretClicks] = useState(0);
 
   // Reactive auth state listener
   useEffect(() => {
@@ -337,35 +339,6 @@ const App = () => {
           </section>
         )}
 
-        {!authUser && (
-          <div className="login-cta">
-            <div className="login-cta-content">
-              <p className="login-cta-title">Unlock the Full Experience</p>
-              <p className="login-cta-desc">
-                Create a free account to access premium features
-              </p>
-              <div className="login-cta-features">
-                <span className="login-cta-feature">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#AB8BFF" strokeWidth="2"><path d="M12 2l2.09 6.91L21 12l-6.91 2.09L12 21l-2.09-6.91L3 12l6.91-2.09L12 2z" /></svg>
-                  AI Recommendations
-                </span>
-                <span className="login-cta-feature">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#AB8BFF" strokeWidth="2"><path d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z" /></svg>
-                  Cloud Favorites
-                </span>
-                <span className="login-cta-feature">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#AB8BFF" strokeWidth="2"><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="2" /></svg>
-                  Personalized Picks
-                </span>
-              </div>
-            </div>
-            <div className="login-cta-actions">
-              <Link to="/register" className="login-cta-btn login-cta-btn--primary">Sign Up Free</Link>
-              <Link to="/login" className="login-cta-btn login-cta-btn--secondary">Login</Link>
-            </div>
-          </div>
-        )}
-
         <section className="all-movies">
           <h2>{aiMode && debouncedSearchTerm ? 'AI Results' : `All ${contentType === 'movie' ? 'Movies' : 'Web Series'}`}</h2>
           {totalResults > 0 && (
@@ -413,6 +386,7 @@ const App = () => {
           movieId={selectedContent.id}
           contentType={selectedContent.type}
           onClose={() => setSelectedContent(null)}
+          isStreamingUnlocked={isStreamingUnlocked}
         />
       )}
 
@@ -426,29 +400,54 @@ const App = () => {
         />
       )}
 
-      {authUser && (
-        <>
-          <AIChatbot
-            isOpen={chatbotOpen}
-            onClose={() => setChatbotOpen(false)}
-            onMovieClick={async (movie) => {
-              await addToWishlist(movie);
-              setChatbotOpen(false);
-              setSelectedContent({ id: movie.id, type: 'movie' }); // Bot usually recommends movies
-            }}
-          />
+      <AIChatbot
+        isOpen={chatbotOpen}
+        onClose={() => setChatbotOpen(false)}
+        onMovieClick={async (movie) => {
+          await addToWishlist(movie);
+          setChatbotOpen(false);
+          setSelectedContent({ id: movie.id, type: 'movie' }); // Bot usually recommends movies
+        }}
+      />
 
-          {!chatbotOpen && (
-            <button
-              className="chatbot-fab"
-              onClick={() => setChatbotOpen(true)}
-              title="Chat with MovieBot AI"
-            >
-              <img src="/logo.png" alt="MovieBot" className="chatbot-fab-logo" />
-            </button>
-          )}
-        </>
+      {!chatbotOpen && (
+        <button
+          className={`chatbot-fab ${!isStreamingUnlocked ? 'chatbot-fab--glow' : ''}`}
+          onClick={() => setChatbotOpen(true)}
+          title="Chat with MovieBot AI"
+        >
+          <img src="/logo.png" alt="MovieBot" className="chatbot-fab-logo" />
+        </button>
       )}
+
+      <footer className="footer">
+        <div className="max-w-7xl mx-auto px-5 flex flex-col sm:flex-row items-center justify-between gap-6">
+          <div className="flex items-center gap-4">
+            <button 
+              className="hidden-btn" 
+              onClick={() => {
+                const newClicks = secretClicks + 1;
+                if (newClicks >= 5) {
+                  const newUnlockedState = !isStreamingUnlocked;
+                  setIsStreamingUnlocked(newUnlockedState);
+                  localStorage.setItem('streaming_unlocked', newUnlockedState.toString());
+                  setSecretClicks(0);
+                } else {
+                  setSecretClicks(newClicks);
+                }
+              }}
+            >
+              v1.0.4
+            </button>
+            <p>© 2026 MovieDog. All rights reserved.</p>
+          </div>
+          
+          <div className="flex gap-6">
+            <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
+            <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
+          </div>
+        </div>
+      </footer>
     </main>
   )
 }
