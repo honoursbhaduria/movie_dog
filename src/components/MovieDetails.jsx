@@ -98,6 +98,10 @@ const MovieDetails = ({ movieId, contentType = 'movie', onClose, isStreamingUnlo
         const res = await fetch(`${API_BASE_URL}/tv/${movieId}/season/${selectedSeason}?language=en-US`, API_OPTIONS);
         const data = await res.json();
         setEpisodes(data.episodes || []);
+        
+        // Reset selected episode to 1 when season changes, 
+        // but only if we're not currently playing or if it's a fresh season load
+        setSelectedEpisode(1);
       } catch (error) {
         console.error('Error fetching episodes:', error);
       } finally {
@@ -228,6 +232,7 @@ const MovieDetails = ({ movieId, contentType = 'movie', onClose, isStreamingUnlo
                     </div>
                   ) : (
                     <iframe
+                      key={`${selectedSeason}-${selectedEpisode}`}
                       src={embedUrl}
                       title="Content Player"
                       frameBorder="0"

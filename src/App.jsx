@@ -384,6 +384,18 @@ const App = () => {
                 ))}
               </ul>
 
+              {movieList.length === 0 && !isLoading && debouncedSearchTerm && (
+                <div className="text-center py-10">
+                  <p className="text-gray-200 text-lg">No results found for "{debouncedSearchTerm}" in {contentType === 'movie' ? 'Movies' : 'Web Series'}.</p>
+                  <button 
+                    className="mt-4 text-primary hover:underline"
+                    onClick={() => setContentType(contentType === 'movie' ? 'tv' : 'movie')}
+                  >
+                    Try searching in {contentType === 'movie' ? 'Web Series' : 'Movies'}?
+                  </button>
+                </div>
+              )}
+
               {currentPage < totalPages && (
                 <div className="flex justify-center mt-10">
                   <button
