@@ -1,6 +1,6 @@
-import React from 'react'
+import React, { memo } from 'react'
 
-const MovieCard = ({ movie, onClick }) => {
+const MovieCard = memo(({ movie, onClick }) => {
   const { 
     title, 
     name, 
@@ -43,5 +43,8 @@ const MovieCard = ({ movie, onClick }) => {
       </div>
     </div>
   )
-}
+});
+
+MovieCard.displayName = 'MovieCard';
+
 export default MovieCard

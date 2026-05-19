@@ -9,6 +9,8 @@ import Logout from './components/Logout.jsx'
 import AuthCallback from './components/AuthCallback.jsx'
 import { initAuthListener } from './utils/auth.js'
 
+import MovieDetails from './components/MovieDetails.jsx'
+
 initAuthListener((session) => {
   console.log('Auth state initialized. Session exists:', !!session);
 });
@@ -18,6 +20,7 @@ createRoot(document.getElementById('root')).render(
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<App />} />
+        <Route path="/details/:type/:id" element={<MovieDetails />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/logout" element={<Logout />} />

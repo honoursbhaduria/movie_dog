@@ -158,7 +158,7 @@
     @apply mt-20;
 
     & ul {
-      @apply flex flex-row overflow-y-auto gap-5 -mt-10 w-full hide-scrollbar;
+      @apply flex flex-row overflow-y-auto gap-5 -mt-10 w-full;
     }
 
     & ul li {
@@ -2341,8 +2341,58 @@
   }
 }
 
-.footer {
-  @apply mt-20 py-10 border-t border-light-100/10 text-gray-200 text-sm;
+/* ── Details Page ── */
+.details-page {
+  @apply pt-0;
+}
+
+.details-nav {
+  @apply backdrop-blur-md sticky top-0 z-50 bg-primary/80;
+}
+
+.player-wrapper {
+  box-shadow: 0 50px 100px -20px rgba(0,0,0,0.5), 0 30px 60px -30px rgba(171, 139, 255, 0.2);
+}
+
+.skip-btn {
+  @apply flex flex-col items-center justify-center text-white/40 hover:text-white/100 transition-all duration-300;
+  background: transparent;
+  border: none;
+}
+
+.skip-btn svg {
+  @apply w-8 h-8 sm:w-12 sm:h-12;
+}
+
+.skip-btn span {
+  @apply text-[10px] font-bold mt-1;
+}
+
+/* Landing Screen Animation */
+@keyframes landingFadeIn {
+  from { opacity: 0; transform: scale(1.05); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.animate-fadeIn {
+  animation: landingFadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.reaction-section {
+  @apply transition-all duration-300;
+}
+
+.reaction-section:focus-within {
+  @apply border-primary/30 ring-4 ring-primary/5;
+}
+
+/* Hide scrollbar utility */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
 }
 
 .hidden-btn {
