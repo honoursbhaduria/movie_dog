@@ -338,7 +338,7 @@ const App = () => {
       </Suspense>
 
       {!chatbotOpen && (
-        <button className={`chatbot-fab ${!isStreamingUnlocked ? 'chatbot-fab--glow' : ''}`} onClick={() => setChatbotOpen(true)} title="Chat with AI">
+        <button className={`chatbot-fab ${isStreamingUnlocked ? 'chatbot-fab--glow' : ''}`} onClick={() => setChatbotOpen(true)} title="Chat with AI">
           <img src="/logo.png" alt="Bot" className="chatbot-fab-logo" />
         </button>
       )}
