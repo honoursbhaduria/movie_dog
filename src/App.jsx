@@ -2,7 +2,6 @@ import { useEffect, useState, useCallback, Suspense, lazy } from 'react'
 import Search from './components/Search.jsx'
 import Spinner from './components/Spinner.jsx'
 import MovieCard from './components/MovieCard.jsx'
-import Hero from './components/Hero.jsx'
 import { fetchWithCache } from './utils/cache'
 
 // Lazy load heavy components
@@ -221,7 +220,7 @@ const App = () => {
             )}
           </div>
 
-          <Hero onCardClick={(id) => handleMovieClick(id, 'movie')} />
+          <img src="/hero.png" alt="Hero" className="mx-auto max-w-lg mb-10" />
           <h1>Find <span className="text-gradient">{contentType === 'movie' ? 'Movies' : 'Web Series'}</span> You'll Enjoy Without the Hassle</h1>
 
           <Search 
