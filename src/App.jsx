@@ -220,7 +220,7 @@ const App = () => {
             )}
           </div>
 
-          <img src="/hero.png" alt="Hero" className="mx-auto max-w-lg mb-10" />
+          <img src="/hero.png" alt="Hero" className="mx-auto w-[80%] sm:w-full max-w-[500px] h-auto mb-8 object-contain" />
           <h1>Find <span className="text-gradient">{contentType === 'movie' ? 'Movies' : 'Web Series'}</span> You'll Enjoy Without the Hassle</h1>
 
           <Search 

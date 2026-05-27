@@ -1500,21 +1500,28 @@
 
   .chatbot-fab {
     position: fixed;
-    bottom: 1.5rem;
+    bottom: 2rem;
     right: 1.5rem;
-    z-index: 1000;
-    width: 56px;
-    height: 56px;
+    z-index: 9999;
+    width: 60px;
+    height: 60px;
     border-radius: 50%;
-    border: none;
+    border: 1px solid rgba(255, 255, 255, 0.1);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: transparent;
+    background: rgba(206, 206, 251, 0.1);
+    backdrop-filter: blur(12px);
     color: white;
-    transition: transform 0.2s ease;
+    transition: all 0.3s ease;
     padding: 0;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  }
+
+  .chatbot-fab:hover {
+    transform: scale(1.1);
+    background: rgba(206, 206, 251, 0.2);
   }
 
   .chatbot-fab--glow {
@@ -2045,10 +2052,10 @@
     }
 
     .chatbot-fab {
-      bottom: 1rem;
-      right: 1rem;
-      width: 50px;
-      height: 50px;
+      bottom: 1.5rem;
+      right: 1.25rem;
+      width: 54px;
+      height: 54px;
     }
 
     .chatbot-fab-logo {
