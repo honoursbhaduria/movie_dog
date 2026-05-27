@@ -239,7 +239,7 @@ const App = () => {
           />
         </header>
 
-        {isStreamingUnlocked && continueWatching.length > 0 && !searchTerm && (
+        {continueWatching.length > 0 && !searchTerm && (
           <section className="trending mb-20">
             <h2 className="flex items-center gap-2">
               <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
@@ -248,6 +248,10 @@ const App = () => {
             <ul className="mt-4">
               {continueWatching.slice(0, 10).map((item) => (
                 <li key={item.id} onClick={() => {
+                  if (!isStreamingUnlocked) {
+                    navigate(`/details/${item.metadata.type}/${item.id}`);
+                    return;
+                  }
                   if (item.metadata.type === 'tv') {
                     navigate(`/player/tv/${item.id}/${item.metadata.season}/${item.metadata.episode}`);
                   } else {
