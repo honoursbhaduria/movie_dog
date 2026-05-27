@@ -2395,12 +2395,39 @@
   display: none;
 }
 
-.hidden-btn {
-  @apply bg-yellow-400 text-primary font-bold rounded-lg px-5 py-2.5 transition-all hover:scale-105;
-  opacity: 0;
-  cursor: default;
-  font-size: 0.85rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  box-shadow: none;
+  footer p, 
+  footer a {
+    @apply text-white/90 hover:text-white transition-colors;
+  }
+
+  .hidden-btn {
+    @apply bg-transparent text-transparent border-none px-6 py-3 absolute -left-20 -top-2;
+    cursor: default;
+    user-select: none;
+    z-index: 10;
+  }
+
+
+/* ── Player Page Custom Styles ── */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.animate-slideInRight {
+  animation: slideInRight 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }

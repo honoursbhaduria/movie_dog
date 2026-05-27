@@ -1,8 +1,9 @@
-// Gemini 2.5 Flash — movie recommendation engine
+// Gemini AI — movie recommendation engine
+import { fetchWithCache } from './cache';
 
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
 const GEMINI_TEMPERATURE = parseFloat(import.meta.env.VITE_GEMINI_TEMPERATURE || '0.9');
-const GEMINI_MODEL = 'gemini-2.5-flash';
+const GEMINI_MODEL = 'gemini-1.5-flash';
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
 
 const TMDB_API_KEY = import.meta.env.VITE_TMDB_API_KEY;
@@ -13,6 +14,8 @@ const TMDB_OPTIONS = {
         Authorization: `Bearer ${TMDB_API_KEY}`,
     },
 };
+
+const aiCache = new Map();
 
 /**
  * Get AI-powered movie recommendations based on user's favorites.
@@ -29,6 +32,9 @@ export const getRecommendations = async (favorites) => {
     if (!favorites || favorites.length === 0) return [];
 
     const movieList = favorites.map(f => f.title).join(', ');
+    const cacheKey = `recs:${movieList}`;
+    
+    if (aiCache.has(cacheKey)) return aiCache.get(cacheKey);
 
     const prompt = `You are a senior film critic and recommendation engine. A user loves these movies: ${movieList}.
 
@@ -78,23 +84,23 @@ Respond ONLY with a valid JSON array. No markdown, no extra text. Example:
                 try {
                     const query = encodeURIComponent(rec.title);
                     const yearParam = rec.year ? `&year=${rec.year}` : '';
-                    const res = await fetch(
+                    const data = await fetchWithCache(
                         `https://api.themoviedb.org/3/search/movie?query=${query}${yearParam}&page=1`,
                         TMDB_OPTIONS
                     );
-                    const data = await res.json();
                     const movie = data.results?.[0] || null;
 
                     return {
                         ...rec,
                         movie, // full TMDB movie object (or null)
                     };
-                } catch {
+                } catch (err) {
                     return { ...rec, movie: null };
                 }
             })
         );
 
+        aiCache.set(cacheKey, resolved);
         return resolved;
     } catch (err) {
         console.error('Error getting Gemini recommendations:', err);
@@ -116,6 +122,9 @@ export const aiFilterMovies = async (query) => {
     }
 
     if (!query?.trim()) return [];
+    
+    const cacheKey = `filter:${query.trim().toLowerCase()}`;
+    if (aiCache.has(cacheKey)) return aiCache.get(cacheKey);
 
     const prompt = `You are a movie search engine. The user described what they want to watch:
 "${query}"
@@ -163,19 +172,20 @@ Format: [{"title":"Movie Title","year":"2020"},{"title":"Another Movie","year":"
                 try {
                     const q = encodeURIComponent(item.title);
                     const yearParam = item.year ? `&year=${item.year}` : '';
-                    const res = await fetch(
+                    const d = await fetchWithCache(
                         `https://api.themoviedb.org/3/search/movie?query=${q}${yearParam}&page=1`,
                         TMDB_OPTIONS
                     );
-                    const d = await res.json();
                     return d.results?.[0] || null;
-                } catch {
+                } catch (err) {
                     return null;
                 }
             })
         );
 
-        return movies.filter(Boolean);
+        const results = movies.filter(Boolean);
+        aiCache.set(cacheKey, results);
+        return results;
     } catch (err) {
         console.error('Error in AI filter:', err);
         return [];

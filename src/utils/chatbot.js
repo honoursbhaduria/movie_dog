@@ -1,8 +1,9 @@
 // AI Movie Chatbot — Gemini with Google Search grounding + TMDB resolution
+import { fetchWithCache } from './cache';
 
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
 const GEMINI_TEMPERATURE = parseFloat(import.meta.env.VITE_GEMINI_TEMPERATURE || '0.9');
-const GEMINI_MODEL = 'gemini-2.5-flash';
+const GEMINI_MODEL = 'gemini-1.5-flash';
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
 
 const TMDB_API_KEY = import.meta.env.VITE_TMDB_API_KEY;
@@ -172,11 +173,10 @@ const resolveMoviesFromTMDB = async (recs) => {
             try {
                 const query = encodeURIComponent(rec.title);
                 const yearParam = rec.year ? `&year=${rec.year}` : '';
-                const res = await fetch(
+                const data = await fetchWithCache(
                     `https://api.themoviedb.org/3/search/movie?query=${query}${yearParam}&page=1`,
                     TMDB_OPTIONS
                 );
-                const data = await res.json();
                 const movie = data.results?.[0] || null;
 
                 return movie ? {

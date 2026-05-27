@@ -9,14 +9,31 @@ const PROGRESS_KEY = 'movie_watch_progress';
  * Save watch progress for a movie
  * @param {string|number} movieId - TMDB Movie ID
  * @param {object} data - Progress data from Vidking player
+ * @param {object} metadata - Optional metadata (title, poster, type)
  */
-export const saveWatchProgress = (movieId, data) => {
+export const saveWatchProgress = (movieId, data, metadata = null) => {
   const allProgress = getProgressMap();
+  const existing = allProgress[movieId] || {};
+  
   allProgress[movieId] = {
+    ...existing,
     ...data,
+    ...(metadata ? { metadata } : {}),
     updatedAt: new Date().toISOString()
   };
   localStorage.setItem(PROGRESS_KEY, JSON.stringify(allProgress));
+};
+
+/**
+ * Get all watch progress items sorted by updatedAt
+ * @returns {Array}
+ */
+export const getAllWatchProgress = () => {
+  const allProgress = getProgressMap();
+  return Object.keys(allProgress)
+    .map(id => ({ id, ...allProgress[id] }))
+    .filter(item => item.metadata && item.progress > 0.5) // Only show items with metadata and some progress
+    .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
 };
 
 /**

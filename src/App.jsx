@@ -3,6 +3,7 @@ import Search from './components/Search.jsx'
 import Spinner from './components/Spinner.jsx'
 import MovieCard from './components/MovieCard.jsx'
 import Hero from './components/Hero.jsx'
+import { fetchWithCache } from './utils/cache'
 
 // Lazy load heavy components
 const Wishlist = lazy(() => import('./components/Wishlist.jsx'));
@@ -14,6 +15,7 @@ import { useDebounce } from 'react-use'
 import { getTrendingMovies, updateSearchCount } from './supabase.js'
 import { aiFilterMovies } from './utils/gemini.js'
 import { addToWishlist } from './utils/wishlist.js'
+import { getAllWatchProgress } from './utils/streaming.js'
 
 const API_BASE_URL = 'https://api.themoviedb.org/3';
 const API_KEY = import.meta.env.VITE_TMDB_API_KEY;
@@ -46,6 +48,7 @@ const App = () => {
   const [totalResults, setTotalResults] = useState(0);
 
   const [trendingMovies, setTrendingMovies] = useState([]);
+  const [continueWatching, setContinueWatching] = useState([]);
   const [showWishlist, setShowWishlist] = useState(false);
   const [aiMode, setAiMode] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
@@ -82,7 +85,7 @@ const App = () => {
 
   const fetchContent = async (query = '', page = 1, append = false) => {
     if (append) setIsLoadingMore(true);
-    else { setIsLoading(true); setMovieList([]); }
+    else { setIsLoading(true); }
     setErrorMessage('');
 
     try {
@@ -101,19 +104,21 @@ const App = () => {
           params.append('with_original_language', 'en');
         } else if (category === 'anime') {
           params.append('with_keywords', '210024'); // Anime keyword
+          params.append('with_genres', '16'); // Anime genre
           params.append('with_original_language', 'ja');
         }
 
-        if (language !== 'all') {
+        if (language !== 'all' && category !== 'anime' && category !== 'bollywood' && category !== 'hollywood') {
           params.append('with_original_language', language);
+        } else if (language !== 'all' && (category === 'bollywood' || category === 'hollywood' || category === 'anime')) {
+          // If a specific language is chosen alongside a regional category, we respect the language choice
+          params.set('with_original_language', language);
         }
 
         endpoint = `${API_BASE_URL}/discover/${contentType}?sort_by=popularity.desc&${params.toString()}`;
       }
 
-      const response = await fetch(endpoint, API_OPTIONS);
-      if (!response.ok) throw new Error(`Failed to fetch content`);
-      const data = await response.json();
+      const data = await fetchWithCache(endpoint, API_OPTIONS);
       const newItems = data.results || [];
 
       if (append) setMovieList(prev => [...prev, ...newItems]);
@@ -123,7 +128,10 @@ const App = () => {
       setTotalPages(Math.min(data.total_pages || 0, 500));
       setTotalResults(data.total_results || 0);
 
-      if (query && newItems.length > 0) await updateSearchCount(query, newItems[0]);
+      // Non-blocking update
+      if (query && newItems.length > 0) {
+        updateSearchCount(query, newItems[0]).catch(console.error);
+      }
     } catch (error) {
       setErrorMessage(`Error fetching content. Please try again later.`);
     } finally {
@@ -144,13 +152,14 @@ const App = () => {
     try {
       const movies = await getTrendingMovies();
       if (!movies || movies.length === 0) {
-        const resp = await fetch(`${API_BASE_URL}/trending/${contentType}/day`, API_OPTIONS);
-        if (resp && resp.ok) {
-          const tm = await resp.json();
+        try {
+          const tm = await fetchWithCache(`${API_BASE_URL}/trending/${contentType}/day`, API_OPTIONS);
           setTrendingMovies((tm.results || []).slice(0, 5).map(m => ({
             $id: m.id, title: m.title || m.name, poster_url: m.poster_path ? `https://image.tmdb.org/t/p/w500${m.poster_path}` : '', count: 0
           })));
           return;
+        } catch (err) {
+          console.error('Fallback trending fetch failed:', err);
         }
       }
       setTrendingMovies(movies);
@@ -170,6 +179,13 @@ const App = () => {
   }, [debouncedSearchTerm, aiMode, contentType, category, language]);
 
   useEffect(() => { loadTrendingContent(); }, [contentType]);
+
+  useEffect(() => {
+    const refreshProgress = () => setContinueWatching(getAllWatchProgress());
+    refreshProgress();
+    window.addEventListener('focus', refreshProgress);
+    return () => window.removeEventListener('focus', refreshProgress);
+  }, []);
 
   return (
     <main>
@@ -223,6 +239,47 @@ const App = () => {
             isStreamingUnlocked={isStreamingUnlocked}
           />
         </header>
+
+        {continueWatching.length > 0 && !searchTerm && (
+          <section className="trending mb-20">
+            <h2 className="flex items-center gap-2">
+              <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+              Continue Watching
+            </h2>
+            <ul className="mt-4">
+              {continueWatching.slice(0, 10).map((item) => (
+                <li key={item.id} onClick={() => {
+                  if (item.metadata.type === 'tv') {
+                    navigate(`/player/tv/${item.id}/${item.metadata.season}/${item.metadata.episode}`);
+                  } else {
+                    navigate(`/player/movie/${item.id}`);
+                  }
+                }} className="cursor-pointer group relative">
+                   <div className="relative overflow-hidden rounded-lg">
+                      <img src={item.metadata.poster_url} alt={item.metadata.title} className="group-hover:scale-110 transition-transform duration-500" />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                         <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg>
+                         </div>
+                      </div>
+                      <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-white/20">
+                         <div className="h-full bg-red-600" style={{ width: `${item.progress}%` }} />
+                      </div>
+                   </div>
+                   <div className="mt-3 px-1">
+                      <p className="text-white font-bold text-sm truncate">{item.metadata.title}</p>
+                      {item.metadata.type === 'tv' && (
+                        <p className="text-[10px] font-black text-primary uppercase tracking-widest mt-1">
+                          S{item.metadata.season} E{item.metadata.episode}
+                        </p>
+                      )}
+                      <p className="text-[10px] text-gray-500 mt-0.5">{Math.floor(item.progress)}% Watched</p>
+                   </div>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
         {trendingMovies.length > 0 && (
           <section className="trending">
@@ -285,16 +342,18 @@ const App = () => {
 
       <footer className="footer bg-dark-100/50 backdrop-blur-md mt-20 py-10 border-t border-white/5">
         <div className="max-w-7xl mx-auto px-5 flex flex-col sm:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 relative">
             <button className="hidden-btn" onClick={() => {
               const newClicks = secretClicks + 1;
               if (newClicks >= 5) {
                 const ns = !isStreamingUnlocked;
                 localStorage.setItem('streaming_unlocked', ns.toString());
                 setSecretClicks(0);
-                window.location.reload(); // Force reload to apply state
+                window.location.reload();
               } else setSecretClicks(newClicks);
-            }}>v1.0.4</button>
+            }} aria-label="Secret Toggle">
+              DEBUG
+            </button>
             <p>© 2026 MovieDog. All rights reserved.</p>
           </div>
           <div className="flex gap-6"><a href="#">Privacy</a><a href="#">Terms</a></div>
