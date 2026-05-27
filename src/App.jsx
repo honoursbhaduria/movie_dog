@@ -239,7 +239,7 @@ const App = () => {
           />
         </header>
 
-        {continueWatching.length > 0 && !searchTerm && (
+        {isStreamingUnlocked && continueWatching.length > 0 && !searchTerm && (
           <section className="trending mb-20">
             <h2 className="flex items-center gap-2">
               <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
