@@ -55,6 +55,7 @@ const App = () => {
   const [authUser, setAuthUser] = useState(null);
   const [chatbotOpen, setChatbotOpen] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   
   const isStreamingUnlocked = localStorage.getItem('streaming_unlocked') === 'true';
   const [secretClicks, setSecretClicks] = useState(0);
@@ -193,31 +194,64 @@ const App = () => {
       <div className="wrapper">
         <header>
           <div className="header-actions">
-            {authUser ? (
-              <div className="profile-menu-container">
-                <button className="user-badge profile-toggle-btn" onClick={() => setShowProfileMenu(!showProfileMenu)}>
-                  {authUser.avatar ? <img src={authUser.avatar} alt="" className="user-avatar user-avatar--img" /> : <div className="user-avatar">{(authUser.name || authUser.email || '?').charAt(0).toUpperCase()}</div>}
-                  <div className="user-info desktop-only"><span className="user-name">{authUser.name || 'User'}</span><span className="user-email">{authUser.email}</span></div>
-                  <svg className={`chevron ${showProfileMenu ? 'open' : ''}`} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                </button>
-                {showProfileMenu && (
-                  <div className="profile-dropdown">
-                    <button className="dropdown-item" onClick={() => { setShowWishlist(true); setShowProfileMenu(false); }}>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg> My Favorites
-                    </button>
-                    <Link to="/logout" className="dropdown-item text-red-400">Logout</Link>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="profile-menu-container">
+            {/* Desktop View */}
+            <div className="hidden xs:flex items-center gap-3">
+              <button className="wishlist-btn" onClick={() => setShowWishlist(true)}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                <span>My Favorites</span>
+              </button>
+
+              {authUser ? (
+                <div className="profile-menu-container">
+                  <button className="user-badge profile-toggle-btn" onClick={() => { setShowProfileMenu(!showProfileMenu); setShowMobileMenu(false); }}>
+                    {authUser.avatar ? <img src={authUser.avatar} alt="" className="user-avatar user-avatar--img" /> : <div className="user-avatar">{(authUser.name || authUser.email || '?').charAt(0).toUpperCase()}</div>}
+                    <div className="user-info desktop-only"><span className="user-name">{authUser.name || 'User'}</span><span className="user-email">{authUser.email}</span></div>
+                    <svg className={`chevron ${showProfileMenu ? 'open' : ''}`} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                  </button>
+                  {showProfileMenu && (
+                    <div className="profile-dropdown">
+                      <Link to="/logout" className="dropdown-item text-red-400">Logout</Link>
+                    </div>
+                  )}
+                </div>
+              ) : (
                 <div className="flex items-center gap-3">
-                  <button className="wishlist-btn desktop-only" onClick={() => setShowWishlist(true)}>My Favorites</button>
                   <Link to="/login" className="wishlist-btn">Login</Link>
                   <Link to="/register" className="auth-register-btn">Register</Link>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
+
+            {/* Mobile View (3 dots) */}
+            <div className="xs:hidden profile-menu-container">
+              <button className="wishlist-btn !w-10 !h-10 !p-0 flex items-center justify-center rounded-full" onClick={() => { setShowMobileMenu(!showMobileMenu); setShowProfileMenu(false); }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/>
+                </svg>
+              </button>
+              
+              {showMobileMenu && (
+                <div className="profile-dropdown">
+                  <button className="dropdown-item" onClick={() => { setShowWishlist(true); setShowMobileMenu(false); }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                    My Favorites
+                  </button>
+                  
+                  {authUser ? (
+                    <>
+                      <div className="h-px bg-white/10 my-1" />
+                      <Link to="/logout" className="dropdown-item text-red-400">Logout</Link>
+                    </>
+                  ) : (
+                    <>
+                      <div className="h-px bg-white/10 my-1" />
+                      <Link to="/login" className="dropdown-item">Login</Link>
+                      <Link to="/register" className="dropdown-item">Register</Link>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
           <img src="/hero.png" alt="Hero" className="mx-auto w-[80%] sm:w-full max-w-[500px] h-auto mb-8 object-contain" />

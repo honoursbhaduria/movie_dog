@@ -24,7 +24,7 @@ const Search = ({
             type="text"
             placeholder={aiMode
               ? 'Describe what you want to watch...'
-              : `Search through thousands of ${contentType === 'movie' ? 'movies' : 'web series'}...`}
+              : 'Search...'}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
