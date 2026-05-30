@@ -59,7 +59,11 @@ If you're getting started and need assistance or face any bugs, join our active 
 
 ## <a name="features">🔋 Features</a>
 
-👉 **Browse All Movies**: Explore a wide range of movies available on the platform.
+👉 **Subbed & Dubbed Support**: Toggle between Subbed and Dubbed versions for anime and international content with one click.
+
+👉 **Multiple Streaming Servers**: Choose from 4 high-quality streaming servers (Vidking, SuperEmbed, Vidsrc, and Vidsrc XYZ) for the best viewing experience.
+
+👉 **Browse All Movies & Web Series**: Explore a wide range of movies and TV shows available on the platform.
 
 👉 **Search Movies**: Easily search for specific movies using a search function.
 
