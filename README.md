@@ -38,15 +38,13 @@ If you prefer visual learning, this is the perfect resource for you. Follow our 
 
 ## <a name="introduction">🤖 Introduction</a>
 
-Built with React.js for the user interface, Appwrite for backend services, and styled with TailwindCSS, this Movie App lets users browse trending movies, search titles, and explore content using the TMDB API. It features a responsive layout and a sleek, modern design.
+Built with React.js for the user interface and styled with TailwindCSS, this Movie App lets users browse trending movies, search titles, and explore content. It features a responsive layout and a sleek, modern design.
 
 If you're getting started and need assistance or face any bugs, join our active Discord community with over **50k+** members. It's a place where people help each other out.
 
 <a href="https://discord.com/invite/n6EdbFJ" target="_blank"><img src="https://github.com/sujatagunale/EasyRead/assets/151519281/618f4872-1e10-42da-8213-1d69e486d02e" /></a>
 
 ## <a name="tech-stack">⚙️ Tech Stack</a>
-
-- **[Appwrite](https://appwrite.io/)** is an open-source Backend-as-a-Service (BaaS) platform that provides developers with a set of APIs to manage authentication, databases, storage, and more, enabling rapid development of secure and scalable applications.
 
 - **[React.js](https://react.dev/reference/react)** is a JavaScript library developed by Meta for building user interfaces. It allows developers to create reusable UI components that manage their own state, leading to more efficient and predictable code. React is widely used for developing single-page applications (SPAs) due to its virtual DOM that improves performance and ease of maintenance.
 
@@ -58,10 +56,6 @@ If you're getting started and need assistance or face any bugs, join our active 
 
 
 ## <a name="features">🔋 Features</a>
-
-👉 **Subbed & Dubbed Support**: Toggle between Subbed and Dubbed versions for anime and international content with one click.
-
-👉 **Multiple Streaming Servers**: Choose from 4 high-quality streaming servers (Vidking, SuperEmbed, Vidsrc, and Vidsrc XYZ) for the best viewing experience.
 
 👉 **Browse All Movies & Web Series**: Explore a wide range of movies and TV shows available on the platform.
 
@@ -76,21 +70,19 @@ If you're getting started and need assistance or face any bugs, join our active 
 and many more, including code architecture and reusability
 ## movie_finder
 
-A lightweight React app to search and browse movies using The Movie Database (TMDb) API.
+A lightweight React app to search and browse movies.
 
 ## Features
 
 - Search movies (debounced)
 - Browse popular/discovered movies with pagination
-- Movie details modal with trailer, cast, and "where to watch" providers
+- Movie details modal with trailer, cast, and details
 - Wishlist (localStorage)
-- Trending section (Supabase-backed if configured, falls back to TMDb trending)
+- Trending section
 
 ## Tech
 
 - React + Vite
-- TMDb API
-- Optional: Supabase for storing trending searches
 
 ## Quick Start
 
@@ -100,19 +92,7 @@ A lightweight React app to search and browse movies using The Movie Database (TM
 npm install
 ```
 
-2. Add environment variables (copy `.env.example` or create a `.env`):
-
-```
-VITE_TMDB_API_KEY=YOUR_TMDB_BEARER_TOKEN
-# Optional Supabase (for persisted trending)
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key
-```
-
-- `VITE_TMDB_API_KEY` should be a TMDb v4 (Bearer) token or v3 key as used in the app.
-- If Supabase is not configured, the app uses TMDb's trending endpoint as a fallback.
-
-3. Run the dev server
+2. Run the dev server
 
 ```bash
 npm run dev
