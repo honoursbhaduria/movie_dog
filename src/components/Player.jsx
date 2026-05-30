@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { fetchWithCache } from '../utils/cache'
 import { saveWatchProgress, getResumeTime } from '../utils/streaming'
 import Spinner from './Spinner'
@@ -17,9 +17,11 @@ const API_OPTIONS = {
 
 const SERVERS = [
   { id: 'vidking', name: 'Server 1 (Vidking)', url: (type, id, s, e) => type === 'tv' ? `https://www.vidking.net/embed/tv/${id}/${s}/${e}` : `https://www.vidking.net/embed/movie/${id}` },
-  { id: 'superembed', name: 'Server 2 (SuperEmbed)', url: (type, id, s, e) => type === 'tv' ? `https://multiembed.mov/?video_id=${id}&tmdb=1&s=${s}&e=${e}` : `https://multiembed.mov/?video_id=${id}&tmdb=1` },
+  { id: 'superembed', name: 'Server 2 (SuperEmbed)', url: (type, id, s, e) => type === 'tv' ? `https://multiembed.mov/directstream.php?video_id=${id}&tmdb=1&s=${s}&e=${e}` : `https://multiembed.mov/directstream.php?video_id=${id}&tmdb=1` },
   { id: 'vidsrc', name: 'Server 3 (Vidsrc)', url: (type, id, s, e) => type === 'tv' ? `https://vidsrc.me/embed/tv?tmdb=${id}&season=${s}&episode=${e}` : `https://vidsrc.me/embed/movie?tmdb=${id}` },
+  { id: 'vidsrc_xyz', name: 'Server 4 (Vidsrc XYZ)', url: (type, id, s, e) => type === 'tv' ? `https://vidsrc.xyz/embed/tv?tmdb=${id}&season=${s}&episode=${e}` : `https://vidsrc.xyz/embed/movie?tmdb=${id}` },
 ];
+
 
 const Player = () => {
   const { type, id, season: sParam, episode: eParam } = useParams();
@@ -28,6 +30,7 @@ const Player = () => {
   const [details, setDetails] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [currentServer, setCurrentServer] = useState(SERVERS[0]);
+  const [mode, setMode] = useState('dub'); // 'dub' is now the default
   const [selectedSeason, setSelectedSeason] = useState(parseInt(sParam) || 1);
   const [selectedEpisode, setSelectedEpisode] = useState(parseInt(eParam) || 1);
   const [episodes, setEpisodes] = useState([]);
@@ -102,7 +105,9 @@ const Player = () => {
               saveWatchProgress(id, message.data, metadata);
             }
           }
-        } catch { }
+        } catch (e) { 
+          // Ignore non-JSON messages from embedded iframes
+        }
       }
     };
     if (details) {
@@ -116,7 +121,23 @@ const Player = () => {
 
   const title = details.title || details.name;
   const resumeTime = getResumeTime(id);
-  const embedUrl = currentServer.url(type, id, selectedSeason, selectedEpisode) + (currentServer.id === 'vidking' ? `?color=ff2e8c&autoPlay=true&progress=${resumeTime}` : '');
+  
+  const getEmbedUrl = () => {
+    let url = currentServer.url(type, id, selectedSeason, selectedEpisode);
+    const hasParams = url.includes('?');
+    
+    if (currentServer.id === 'vidking') {
+      url += `${hasParams ? '&' : '?'}color=ff2e8c&autoPlay=true&progress=${resumeTime}`;
+    }
+    
+    if (mode === 'dub') {
+      url += `${url.includes('?') ? '&' : '?'}ds_lang=en`;
+    }
+    
+    return url;
+  };
+
+  const embedUrl = getEmbedUrl();
 
   return (
     <div className="player-page bg-[#0a0a0c] min-h-screen text-white flex flex-col overflow-hidden">
@@ -157,8 +178,30 @@ const Player = () => {
               ></iframe>
             </div>
 
-            {/* Server Selection */}
-            <div className="mt-10 space-y-4">
+            {/* Mode & Server Selection */}
+            <div className="mt-10 space-y-6">
+              {/* Language Mode Toggle */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Language Mode:</span>
+                </div>
+                <div className="flex bg-white/5 rounded-xl p-1 border border-white/5">
+                  <button 
+                    onClick={() => setMode('sub')}
+                    className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${mode === 'sub' ? 'bg-[#ff2e8c] text-white shadow-lg' : 'text-gray-500 hover:text-gray-300'}`}
+                  >
+                    Subbed
+                  </button>
+                  <button 
+                    onClick={() => setMode('dub')}
+                    className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${mode === 'dub' ? 'bg-[#ff2e8c] text-white shadow-lg' : 'text-gray-500 hover:text-gray-300'}`}
+                  >
+                    Dubbed
+                  </button>
+                </div>
+              </div>
+
               <div className="flex items-center justify-between">
                  <div className="flex items-center gap-2">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="2.5"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
@@ -173,7 +216,7 @@ const Player = () => {
                  </button>
               </div>
               <div className="flex flex-wrap gap-3">
-                {SERVERS.map((server, idx) => (
+                {SERVERS.map((server) => (
                   <button 
                     key={server.id}
                     onClick={() => setCurrentServer(server)}
