@@ -1,21 +1,18 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL || '').trim();
-const supabaseAnonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim();
+const supabaseKey = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || '').trim();
 
 // Check if Supabase is configured and valid
 const isSupabaseConfigured = 
   supabaseUrl && 
-  supabaseAnonKey && 
-  supabaseAnonKey !== 'your_anon_key_here';
+  supabaseKey && 
+  supabaseKey !== 'your_key_here';
 
-let supabase = null;
+export const supabase = isSupabaseConfigured 
+  ? createClient(supabaseUrl, supabaseKey) 
+  : null;
 
-if (isSupabaseConfigured) {
-  supabase = createClient(supabaseUrl, supabaseAnonKey);
-}
-
-export { supabase };
 export default supabase;
 
 export const updateSearchCount = async (searchTerm, movie) => {
