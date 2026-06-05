@@ -16,7 +16,8 @@ export const fetchWithCache = async (url, options = {}, ttl = 300000) => {
 
   const response = await fetch(url, options);
   if (!response.ok) {
-    throw new Error(`Fetch failed: ${response.statusText}`);
+    const errorText = await response.text().catch(() => '');
+    throw new Error(`Fetch failed: ${response.status} ${response.statusText}${errorText ? ` - ${errorText}` : ''}`);
   }
 
   const data = await response.json();

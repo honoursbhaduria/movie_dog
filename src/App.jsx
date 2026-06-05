@@ -19,6 +19,9 @@ import { getAllWatchProgress } from './utils/streaming.js'
 const API_BASE_URL = 'https://api.themoviedb.org/3';
 const API_KEY = import.meta.env.VITE_TMDB_API_KEY;
 
+// Validate TMDB API Key configuration
+const isTMDBConfigured = API_KEY && API_KEY !== 'your_tmdb_api_key_here' && API_KEY.length > 20;
+
 const API_OPTIONS = {
   method: 'GET',
   headers: {
@@ -84,6 +87,11 @@ const App = () => {
   useDebounce(() => setDebouncedSearchTerm(searchTerm), 500, [searchTerm])
 
   const fetchContent = async (query = '', page = 1, append = false) => {
+    if (!isTMDBConfigured) {
+      setErrorMessage('TMDB API Key is missing or invalid. Note: You must use the "API Read Access Token" (the very long one) from TMDB settings, not the shorter "API Key".');
+      return;
+    }
+
     if (append) setIsLoadingMore(true);
     else { setIsLoading(true); }
     setErrorMessage('');
@@ -152,6 +160,10 @@ const App = () => {
     try {
       const movies = await getTrendingMovies();
       if (!movies || movies.length === 0) {
+        if (!isTMDBConfigured) {
+          console.warn('Supabase trending empty and TMDB API Key not configured. Skipping fallback.');
+          return;
+        }
         try {
           const tm = await fetchWithCache(`${API_BASE_URL}/trending/${contentType}/day`, API_OPTIONS);
           setTrendingMovies((tm.results || []).slice(0, 5).map(m => ({
@@ -162,8 +174,10 @@ const App = () => {
           console.error('Fallback trending fetch failed:', err);
         }
       }
-      setTrendingMovies(movies);
-    } catch (error) { console.error(error); }
+      setTrendingMovies(movies || []);
+    } catch (error) { 
+      console.error('Error loading trending content:', error); 
+    }
   }
 
   useEffect(() => {
