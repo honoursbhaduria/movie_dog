@@ -70,7 +70,12 @@ const MovieDetails = () => {
           setSelectedSeason(firstSeason.season_number);
         }
       } catch (error) {
-        console.error('Error fetching details:', error);
+        const isNetworkError = error instanceof TypeError || (error.message && (error.message.includes('NetworkError') || error.message.includes('Failed to fetch')));
+        if (isNetworkError) {
+          console.warn('Details fetch blocked by network or adblocker.');
+        } else {
+          console.error('Error fetching details:', error);
+        }
       } finally {
         setIsLoading(false);
       }
@@ -90,7 +95,10 @@ const MovieDetails = () => {
         const data = await fetchWithCache(`${API_BASE_URL}/tv/${movieId}/season/${selectedSeason}?language=en-US`, API_OPTIONS);
         setEpisodes(data.episodes || []);
       } catch (error) {
-        console.error('Error fetching episodes:', error);
+        const isNetworkError = error instanceof TypeError || (error.message && (error.message.includes('NetworkError') || error.message.includes('Failed to fetch')));
+        if (!isNetworkError) {
+          console.error('Error fetching episodes:', error);
+        }
       } finally {
         setLoadingEpisodes(false);
       }

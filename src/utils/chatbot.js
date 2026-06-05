@@ -111,8 +111,11 @@ export const sendChatMessage = async (history, userMessage) => {
 
         return { reply: fullText || "Here are my recommendations! 🎥", movies };
     } catch (err) {
-        console.error('Chatbot error:', err);
-        return { reply: "Oops, something went wrong. Please try again! 🎬", movies: [] };
+        const isNetworkError = err instanceof TypeError || (err.message && (err.message.includes('NetworkError') || err.message.includes('Failed to fetch')));
+        if (!isNetworkError) {
+          console.error('Chatbot error:', err);
+        }
+        return { reply: "Oops, I'm having trouble connecting to my brain right now. Please check your internet! 🎬", movies: [] };
     }
 };
 

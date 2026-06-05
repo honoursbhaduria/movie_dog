@@ -103,7 +103,10 @@ Respond ONLY with a valid JSON array. No markdown, no extra text. Example:
         aiCache.set(cacheKey, resolved);
         return resolved;
     } catch (err) {
-        console.error('Error getting Gemini recommendations:', err);
+        const isNetworkError = err instanceof TypeError || (err.message && (err.message.includes('NetworkError') || err.message.includes('Failed to fetch')));
+        if (!isNetworkError) {
+          console.error('Error getting Gemini recommendations:', err);
+        }
         return [];
     }
 };
@@ -187,7 +190,10 @@ Format: [{"title":"Movie Title","year":"2020"},{"title":"Another Movie","year":"
         aiCache.set(cacheKey, results);
         return results;
     } catch (err) {
-        console.error('Error in AI filter:', err);
+        const isNetworkError = err instanceof TypeError || (err.message && (err.message.includes('NetworkError') || err.message.includes('Failed to fetch')));
+        if (!isNetworkError) {
+          console.error('Error in AI filter:', err);
+        }
         return [];
     }
 };

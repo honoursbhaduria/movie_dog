@@ -141,7 +141,12 @@ const App = () => {
         updateSearchCount(query, newItems[0]).catch(console.error);
       }
     } catch (error) {
-      setErrorMessage(`Error fetching content. Please try again later.`);
+      const isNetworkError = error instanceof TypeError || (error.message && (error.message.includes('NetworkError') || error.message.includes('Failed to fetch')));
+      if (isNetworkError) {
+        setErrorMessage('Unable to connect to TMDB. Please check your internet or disable adblockers if you are using any.');
+      } else {
+        setErrorMessage(`Error fetching content. Please try again later.`);
+      }
     } finally {
       setIsLoading(false);
       setIsLoadingMore(false);
@@ -171,7 +176,12 @@ const App = () => {
           })));
           return;
         } catch (err) {
-          console.error('Fallback trending fetch failed:', err);
+          const isNetworkError = err instanceof TypeError || (err.message && (err.message.includes('NetworkError') || err.message.includes('Failed to fetch')));
+          if (isNetworkError) {
+            console.warn('Trending fetch blocked by network or adblocker. Check if TMDB is accessible.');
+          } else {
+            console.error('Fallback trending fetch failed:', err);
+          }
         }
       }
       setTrendingMovies(movies || []);

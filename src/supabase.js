@@ -48,7 +48,10 @@ export const updateSearchCount = async (searchTerm, movie) => {
         });
     }
   } catch (error) {
-    console.error('Error updating search count:', error);
+    const isNetworkError = error instanceof TypeError || (error.message && (error.message.includes('NetworkError') || error.message.includes('Failed to fetch')));
+    if (!isNetworkError) {
+      console.error('Error updating search count:', error);
+    }
   }
 };
 
