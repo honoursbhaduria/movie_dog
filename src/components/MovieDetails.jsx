@@ -1,6 +1,7 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { fetchWithCache } from '../utils/cache'
+import { getTMDBImageUrl } from '../utils/image'
 import {
   addToWishlist,
   removeFromWishlist,
@@ -14,8 +15,10 @@ import {
 
 import Spinner from './Spinner'
 
-const API_BASE_URL = 'https://api.themoviedb.org/3';
-const API_KEY = import.meta.env.VITE_TMDB_API_KEY;
+import { tmdbFetch, TMDB_BASE_URL, TMDB_API_KEY } from '../utils/tmdb'
+
+const API_BASE_URL = TMDB_BASE_URL;
+const API_KEY = TMDB_API_KEY;
 
 const API_OPTIONS = {
   method: 'GET',
@@ -41,7 +44,7 @@ const MovieDetails = () => {
   const [episodes, setEpisodes] = useState([]);
   const [loadingEpisodes, setLoadingEpisodes] = useState(false);
 
-  const isStreamingUnlocked = localStorage.getItem('streaming_unlocked') === 'true';
+  const isStreamingUnlocked = true;
 
   useEffect(() => {
     if (movieId) {
@@ -53,29 +56,33 @@ const MovieDetails = () => {
         setIsLoading(true);
         const type = contentType === 'tv' ? 'tv' : 'movie';
 
-        const [detailsData, creditsData, videosData, providersData] = await Promise.all([
-          fetchWithCache(`${API_BASE_URL}/${type}/${movieId}?language=en-US`, API_OPTIONS),
-          fetchWithCache(`${API_BASE_URL}/${type}/${movieId}/credits?language=en-US`, API_OPTIONS),
-          fetchWithCache(`${API_BASE_URL}/${type}/${movieId}/videos?language=en-US`, API_OPTIONS),
-          fetchWithCache(`${API_BASE_URL}/${type}/${movieId}/watch/providers`, API_OPTIONS)
-        ]);
-
-        setDetails(detailsData);
-        setCredits(creditsData);
-        setVideos(videosData);
-        setWatchProviders(providersData);
-
-        if (contentType === 'tv' && detailsData.seasons?.length > 0) {
-          const firstSeason = detailsData.seasons.find(s => s.season_number > 0) || detailsData.seasons[0];
-          setSelectedSeason(firstSeason.season_number);
+        // Essential data
+        try {
+          const detailsData = await tmdbFetch(`/${type}/${movieId}`, { language: 'en-US' });
+          setDetails(detailsData);
+          if (contentType === 'tv' && detailsData.seasons?.length > 0) {
+            const firstSeason = detailsData.seasons.find(s => s.season_number > 0) || detailsData.seasons[0];
+            setSelectedSeason(firstSeason.season_number);
+          }
+        } catch (err) {
+          console.error('Error fetching main details:', err);
+          setIsLoading(false);
+          return;
         }
+
+        // Supplementary data - fetched in parallel but errors are caught individually
+        Promise.allSettled([
+          tmdbFetch(`/${type}/${movieId}/credits`, { language: 'en-US' }),
+          tmdbFetch(`/${type}/${movieId}/videos`, { language: 'en-US' }),
+          tmdbFetch(`/${type}/${movieId}/watch/providers`)
+        ]).then(([creditsRes, videosRes, providersRes]) => {
+          if (creditsRes.status === 'fulfilled') setCredits(creditsRes.value);
+          if (videosRes.status === 'fulfilled') setVideos(videosRes.value);
+          if (providersRes.status === 'fulfilled') setWatchProviders(providersRes.value);
+        });
+
       } catch (error) {
-        const isNetworkError = error instanceof TypeError || (error.message && (error.message.includes('NetworkError') || error.message.includes('Failed to fetch')));
-        if (isNetworkError) {
-          console.warn('Details fetch blocked by network or adblocker.');
-        } else {
-          console.error('Error fetching details:', error);
-        }
+        console.error('Unexpected error in fetchDetails:', error);
       } finally {
         setIsLoading(false);
       }
@@ -92,7 +99,7 @@ const MovieDetails = () => {
 
       try {
         setLoadingEpisodes(true);
-        const data = await fetchWithCache(`${API_BASE_URL}/tv/${movieId}/season/${selectedSeason}?language=en-US`, API_OPTIONS);
+        const data = await tmdbFetch(`/tv/${movieId}/season/${selectedSeason}`, { language: 'en-US' });
         setEpisodes(data.episodes || []);
       } catch (error) {
         const isNetworkError = error instanceof TypeError || (error.message && (error.message.includes('NetworkError') || error.message.includes('Failed to fetch')));
@@ -169,7 +176,7 @@ const MovieDetails = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-12">
         {/* ── Hero Section ── */}
         <div className="relative h-[300px] xs:h-[450px] sm:h-[650px] rounded-[24px] sm:rounded-[48px] overflow-hidden mb-8 sm:mb-16 group shadow-[0_40px_100px_rgba(0,0,0,0.6)]">
-           <img src={`https://image.tmdb.org/t/p/original${details.backdrop_path || details.poster_path}`} className="w-full h-full object-cover opacity-60" alt="" />
+           <img src={getTMDBImageUrl(details.backdrop_path || details.poster_path, 'original')} className="w-full h-full object-cover opacity-60" alt="" />
            <div className="absolute inset-0 bg-gradient-to-t from-[#030014] via-transparent to-transparent" />
            
            <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
@@ -200,7 +207,7 @@ const MovieDetails = () => {
           <div className="lg:col-span-8 space-y-10 sm:space-y-16">
             <header className="space-y-6 sm:space-y-8 text-left">
               <h1 className="text-4xl xs:text-6xl sm:text-8xl font-black leading-[0.9] tracking-tighter m-0 text-left">{title}</h1>
-              {details.tagline && <p className="text-lg xs:text-2xl sm:text-3xl text-gray-400 italic font-medium tracking-tight">"{details.tagline}"</p>}
+              {details.tagline && <p className="text-lg xs:text-2xl sm:text-3xl text-gray-400 italic font-medium tracking-tight">&quot;{details.tagline}&quot;</p>}
               
               <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-[10px] sm:text-xs font-black uppercase tracking-widest">
                 <div className="flex items-center gap-2 bg-yellow-400 text-black px-3 sm:px-4 py-1.5 rounded-full shadow-[0_0_15px_rgba(250,204,21,0.3)]">
@@ -248,7 +255,7 @@ const MovieDetails = () => {
                       className="flex gap-4 sm:gap-5 w-full text-left group bg-white/5 p-3 rounded-[24px] border border-transparent hover:border-primary/50 hover:bg-white/10 transition-all"
                     >
                       <div className="w-28 sm:w-36 aspect-video rounded-[16px] sm:rounded-[20px] overflow-hidden shrink-0 shadow-xl border border-white/5 relative">
-                        <img src={ep.still_path ? `https://image.tmdb.org/t/p/w200${ep.still_path}` : details.backdrop_path ? `https://image.tmdb.org/t/p/w200${details.backdrop_path}` : '/no-movie.png'} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="" />
+                        <img src={getTMDBImageUrl(ep.still_path || details.backdrop_path, 'w200')} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="" />
                         <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
                            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-lg">
                               <svg width="14" height="14" viewBox="0 0 24 24" fill="white" className="ml-0.5"><path d="M8 5v14l11-7z"/></svg>
@@ -272,7 +279,7 @@ const MovieDetails = () => {
                 <div className="flex flex-wrap gap-4 sm:gap-5">
                   {providers.flatrate?.map(p => (
                     <div key={p.provider_id} title={p.provider_name} className="w-12 h-12 sm:w-16 sm:h-16 rounded-[16px] sm:rounded-[24px] overflow-hidden border border-white/10 hover:border-primary transition-all cursor-pointer shadow-xl scale-100 hover:scale-110">
-                      <img src={`https://image.tmdb.org/t/p/original${p.logo_path}`} className="w-full h-full object-cover" alt="" />
+                      <img src={getTMDBImageUrl(p.logo_path, 'original')} className="w-full h-full object-cover" alt="" />
                     </div>
                   ))}
                 </div>

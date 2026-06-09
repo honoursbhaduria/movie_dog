@@ -1,4 +1,5 @@
 import React, { memo } from 'react'
+import { getTMDBImageUrl } from '../utils/image'
 
 const MovieCard = memo(({ movie, onClick }) => {
   const { 
@@ -17,8 +18,7 @@ const MovieCard = memo(({ movie, onClick }) => {
   return (
     <div className="movie-card" onClick={onClick}>
       <img
-        src={poster_path ?
-          `https://image.tmdb.org/t/p/w500${poster_path}` : '/no-movie.png'}
+        src={getTMDBImageUrl(poster_path, 'w500')}
         alt={displayTitle}
         loading="lazy"
       />

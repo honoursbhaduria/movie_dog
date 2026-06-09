@@ -4,8 +4,10 @@ import { fetchWithCache } from '../utils/cache'
 import { saveWatchProgress, getResumeTime } from '../utils/streaming'
 import Spinner from './Spinner'
 
-const API_BASE_URL = 'https://api.themoviedb.org/3';
-const API_KEY = import.meta.env.VITE_TMDB_API_KEY;
+import { tmdbFetch, TMDB_BASE_URL, TMDB_API_KEY } from '../utils/tmdb'
+
+const API_BASE_URL = TMDB_BASE_URL;
+const API_KEY = TMDB_API_KEY;
 
 const API_OPTIONS = {
   method: 'GET',
@@ -16,10 +18,12 @@ const API_OPTIONS = {
 }
 
 const SERVERS = [
-  { id: 'vidking', name: 'Server 1 (Vidking)', url: (type, id, s, e) => type === 'tv' ? `https://www.vidking.net/embed/tv/${id}/${s}/${e}` : `https://www.vidking.net/embed/movie/${id}` },
-  { id: 'superembed', name: 'Server 2 (SuperEmbed)', url: (type, id, s, e) => type === 'tv' ? `https://multiembed.mov/directstream.php?video_id=${id}&tmdb=1&s=${s}&e=${e}` : `https://multiembed.mov/directstream.php?video_id=${id}&tmdb=1` },
-  { id: 'vidsrc', name: 'Server 3 (Vidsrc)', url: (type, id, s, e) => type === 'tv' ? `https://vidsrc.me/embed/tv?tmdb=${id}&season=${s}&episode=${e}` : `https://vidsrc.me/embed/movie?tmdb=${id}` },
-  { id: 'vidsrc_xyz', name: 'Server 4 (Vidsrc XYZ)', url: (type, id, s, e) => type === 'tv' ? `https://vidsrc.xyz/embed/tv?tmdb=${id}&season=${s}&episode=${e}` : `https://vidsrc.xyz/embed/movie?tmdb=${id}` },
+  { id: 'cineby', name: 'Server 1 (Cineby)', url: (type, id, s, e) => type === 'tv' ? `https://cineby.sc/embed/tv/${id}/${s}/${e}` : `https://cineby.sc/embed/movie/${id}` },
+  { id: 'vidking', name: 'Server 2 (Vidking)', url: (type, id, s, e) => type === 'tv' ? `https://www.vidking.net/embed/tv/${id}/${s}/${e}` : `https://www.vidking.net/embed/movie/${id}` },
+  { id: 'vidsrc', name: 'Server 3 (Vidsrc.to)', url: (type, id, s, e) => type === 'tv' ? `https://vidsrc.to/embed/tv/${id}/${s}/${e}` : `https://vidsrc.to/embed/movie/${id}` },
+  { id: 'vidsrc_cc', name: 'Server 4 (Vidsrc.cc)', url: (type, id, s, e) => type === 'tv' ? `https://vidsrc.cc/v2/embed/tv/${id}/${s}/${e}` : `https://vidsrc.cc/v2/embed/movie/${id}` },
+  { id: 'superembed', name: 'Server 5 (SuperEmbed)', url: (type, id, s, e) => type === 'tv' ? `https://multiembed.mov/directstream.php?video_id=${id}&tmdb=1&s=${s}&e=${e}` : `https://multiembed.mov/directstream.php?video_id=${id}&tmdb=1` },
+  { id: 'embedsu', name: 'Server 6 (Embed.su)', url: (type, id, s, e) => type === 'tv' ? `https://embed.su/embed/tv/${id}/${s}/${e}` : `https://embed.su/embed/movie/${id}` },
 ];
 
 
@@ -34,11 +38,12 @@ const Player = () => {
   const [selectedSeason, setSelectedSeason] = useState(parseInt(sParam) || 1);
   const [selectedEpisode, setSelectedEpisode] = useState(parseInt(eParam) || 1);
   const [episodes, setEpisodes] = useState([]);
+  // eslint-disable-next-line no-unused-vars
   const [loadingEpisodes, setLoadingEpisodes] = useState(false);
   const [activeEpisodeData, setActiveEpisodeData] = useState(null);
 
   const playerRef = useRef(null);
-  const isStreamingUnlocked = localStorage.getItem('streaming_unlocked') === 'true';
+  const isStreamingUnlocked = true;
 
   useEffect(() => {
     if (!isStreamingUnlocked) {
@@ -49,7 +54,7 @@ const Player = () => {
     const fetchDetails = async () => {
       try {
         setIsLoading(true);
-        const data = await fetchWithCache(`${API_BASE_URL}/${type}/${id}?language=en-US`, API_OPTIONS);
+        const data = await tmdbFetch(`/${type}/${id}`, { language: 'en-US' });
         setDetails(data);
         
         if (type === 'tv' && !sParam) {
@@ -64,7 +69,7 @@ const Player = () => {
     };
 
     fetchDetails();
-  }, [id, type, sParam]);
+  }, [id, type, sParam, isStreamingUnlocked, navigate]);
 
   useEffect(() => {
     const fetchEpisodes = async () => {
@@ -72,7 +77,7 @@ const Player = () => {
       
       try {
         setLoadingEpisodes(true);
-        const data = await fetchWithCache(`${API_BASE_URL}/tv/${id}/season/${selectedSeason}?language=en-US`, API_OPTIONS);
+        const data = await tmdbFetch(`/tv/${id}/season/${selectedSeason}`, { language: 'en-US' });
         setEpisodes(data.episodes || []);
         
         // Update active episode info
@@ -128,6 +133,9 @@ const Player = () => {
     
     if (currentServer.id === 'vidking') {
       url += `${hasParams ? '&' : '?'}color=ff2e8c&autoPlay=true&progress=${resumeTime}`;
+      if (type === 'tv') {
+        url += `&nextEpisode=true&episodeSelector=true`;
+      }
     }
     
     if (mode === 'dub') {

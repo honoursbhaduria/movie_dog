@@ -64,7 +64,7 @@ export const getResumeTime = (movieId) => {
   const progress = getWatchProgress(movieId);
   // Only resume if progress is between 1% and 95%
   if (progress && progress.progress > 1 && progress.progress < 95) {
-    return Math.floor(progress.timestamp || 0);
+    return Math.floor(progress.currentTime || progress.timestamp || 0);
   }
   return 0;
 };

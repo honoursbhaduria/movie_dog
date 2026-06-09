@@ -81,14 +81,12 @@ const Search = ({
           >
             Hollywood
           </button>
-          {isStreamingUnlocked && (
-            <button 
-              className={`filter-btn ${category === 'anime' ? 'active' : ''}`}
-              onClick={() => setCategory('anime')}
-            >
-              Anime
-            </button>
-          )}
+          <button 
+            className={`filter-btn ${category === 'anime' ? 'active' : ''}`}
+            onClick={() => setCategory('anime')}
+          >
+            Anime
+          </button>
         </div>
 
         <div className="filter-group">

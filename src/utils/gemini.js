@@ -1,19 +1,8 @@
 // Gemini AI — movie recommendation engine
 import { fetchWithCache } from './cache';
+import { tmdbFetch } from './tmdb';
 
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
-const GEMINI_TEMPERATURE = parseFloat(import.meta.env.VITE_GEMINI_TEMPERATURE || '0.9');
-const GEMINI_MODEL = 'gemini-1.5-flash';
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
-
-const TMDB_API_KEY = import.meta.env.VITE_TMDB_API_KEY;
-const TMDB_OPTIONS = {
-    method: 'GET',
-    headers: {
-        accept: 'application/json',
-        Authorization: `Bearer ${TMDB_API_KEY}`,
-    },
-};
 
 const aiCache = new Map();
 
@@ -82,12 +71,11 @@ Respond ONLY with a valid JSON array. No markdown, no extra text. Example:
         const resolved = await Promise.all(
             recs.slice(0, 6).map(async (rec) => {
                 try {
-                    const query = encodeURIComponent(rec.title);
-                    const yearParam = rec.year ? `&year=${rec.year}` : '';
-                    const data = await fetchWithCache(
-                        `https://api.themoviedb.org/3/search/movie?query=${query}${yearParam}&page=1`,
-                        TMDB_OPTIONS
-                    );
+                    const data = await tmdbFetch('/search/movie', {
+                        query: rec.title,
+                        year: rec.year || '',
+                        page: '1'
+                    });
                     const movie = data.results?.[0] || null;
 
                     return {
@@ -116,9 +104,11 @@ Respond ONLY with a valid JSON array. No markdown, no extra text. Example:
  * e.g. "funny 90s action movies" or "dark sci-fi like Blade Runner"
  *
  * @param {string} query — natural language description
- * @returns {Promise<Array<object>>} — array of TMDB movie objects
+ * @param {string} contentType — 'movie' or 'tv'
+ * @param {string} category — 'all', 'bollywood', 'hollywood', 'anime'
+ * @returns {Promise<Array<object>>} — array of TMDB objects
  */
-export const aiFilterMovies = async (query) => {
+export const aiFilterMovies = async (query, contentType = 'movie', category = 'all') => {
     if (!GEMINI_API_KEY || GEMINI_API_KEY === 'YOUR_GEMINI_API_KEY_HERE') {
         console.warn('Gemini API key not configured');
         return [];
@@ -126,16 +116,22 @@ export const aiFilterMovies = async (query) => {
 
     if (!query?.trim()) return [];
     
-    const cacheKey = `filter:${query.trim().toLowerCase()}`;
+    const cacheKey = `filter:${contentType}:${category}:${query.trim().toLowerCase()}`;
     if (aiCache.has(cacheKey)) return aiCache.get(cacheKey);
 
-    const prompt = `You are a movie search engine. The user described what they want to watch:
-"${query}"
+    let categoryContext = '';
+    if (category === 'bollywood') categoryContext = ' Focus on Indian/Bollywood cinema.';
+    else if (category === 'hollywood') categoryContext = ' Focus on Hollywood/Western cinema.';
+    else if (category === 'anime') categoryContext = ' Focus strictly on Japanese Anime (animation from Japan).';
 
-Return exactly 12 movie titles that best match this description. Focus on well-known, real movies. Consider genre, mood, era, actors, directors, themes, and style.
+    const prompt = `You are a ${contentType === 'tv' ? 'TV show' : 'movie'} search engine. The user described what they want to watch:
+"${query}"
+${categoryContext}
+
+Return exactly 12 ${contentType === 'tv' ? 'TV show' : 'movie'} titles that best match this description. Focus on well-known, real titles. Consider genre, mood, era, actors, directors, themes, and style.
 
 Respond ONLY with a valid JSON array of objects. No markdown, no extra text.
-Format: [{"title":"Movie Title","year":"2020"},{"title":"Another Movie","year":"1999"}]`;
+Format: [{"title":"Title Name","year":"2020"},{"title":"Another One","year":"1999"}]`;
 
     try {
         const response = await fetch(GEMINI_URL, {
@@ -169,26 +165,25 @@ Format: [{"title":"Movie Title","year":"2020"},{"title":"Another Movie","year":"
 
         const titles = JSON.parse(jsonMatch[0]);
 
-        // Resolve each title via TMDB search
-        const movies = await Promise.all(
+        // Resolve each title via TMDB search in the correct category
+        const results = await Promise.all(
             titles.slice(0, 12).map(async (item) => {
                 try {
-                    const q = encodeURIComponent(item.title);
-                    const yearParam = item.year ? `&year=${item.year}` : '';
-                    const d = await fetchWithCache(
-                        `https://api.themoviedb.org/3/search/movie?query=${q}${yearParam}&page=1`,
-                        TMDB_OPTIONS
-                    );
-                    return d.results?.[0] || null;
+                    const data = await tmdbFetch(`/search/${contentType}`, {
+                        query: item.title,
+                        [contentType === 'movie' ? 'year' : 'first_air_date_year']: item.year || '',
+                        page: '1'
+                    });
+                    return data.results?.[0] || null;
                 } catch (err) {
                     return null;
                 }
             })
         );
 
-        const results = movies.filter(Boolean);
-        aiCache.set(cacheKey, results);
-        return results;
+        const filteredResults = results.filter(Boolean);
+        aiCache.set(cacheKey, filteredResults);
+        return filteredResults;
     } catch (err) {
         const isNetworkError = err instanceof TypeError || (err.message && (err.message.includes('NetworkError') || err.message.includes('Failed to fetch')));
         if (!isNetworkError) {

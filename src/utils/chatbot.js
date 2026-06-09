@@ -1,143 +1,77 @@
 // AI Movie Chatbot — Gemini with Google Search grounding + TMDB resolution
 import { fetchWithCache } from './cache';
+import { tmdbFetch } from './tmdb';
 
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
-const GEMINI_TEMPERATURE = parseFloat(import.meta.env.VITE_GEMINI_TEMPERATURE || '0.9');
+const GEMINI_TEMPERATURE = parseFloat(import.meta.env.VITE_GEMINI_TEMPERATURE || '0.7');
 const GEMINI_MODEL = 'gemini-1.5-flash';
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
-
-const TMDB_API_KEY = import.meta.env.VITE_TMDB_API_KEY;
-const TMDB_OPTIONS = {
-    method: 'GET',
-    headers: {
-        accept: 'application/json',
-        Authorization: `Bearer ${TMDB_API_KEY}`,
-    },
-};
 
 const SYSTEM_PROMPT = `You are MovieDog, an expert AI movie and TV show recommendation assistant. Keep replies SHORT (1-2 sentences max + movie list).
 
 CRITICAL RULES:
 1. You MUST ONLY discuss movies, TV shows, actors, directors, and cinema. 
 2. If the user asks about ANY other topic (politics, history, programming, math, presidents, general knowledge, etc.), you MUST politely refuse and guide them back to movies. Example: "I only know about movies and TV shows! How about I recommend a good political thriller instead?"
-3. Recommend real movies with title and year.
-4. When recommending, end with JSON:
-\`\`\`json
-[{"title":"Movie","year":"2020","reason":"Brief reason"}]
-\`\`\`
-5. Only include JSON when recommending. For questions, reply normally.
-6. Recommend 3-5 movies per request.
-7. Ask follow-up if the request is vague.`;
+3. When recommending, format your response strictly as follows:
+   - A brief, engaging intro sentence.
+   - A valid JSON array of exactly 4-6 recommendations at the end.
+   - Format: [{"title":"Movie Title","year":"2020","reason":"Short reason why"}]
+   - Do NOT include markdown code blocks for the JSON. Just put the [ array ] at the very end.`;
 
 /**
- * Send a message to the AI chatbot.
- * @param {Array<{role: string, text: string}>} history - conversation history
- * @param {string} userMessage - the new user message
- * @returns {Promise<{reply: string, movies: Array}>}
+ * Send a message to the Gemini-powered movie chatbot.
+ * @param {Array} history - Previous messages
+ * @param {string} userMessage - New user message
  */
 export const sendChatMessage = async (history, userMessage) => {
     if (!GEMINI_API_KEY || GEMINI_API_KEY === 'YOUR_GEMINI_API_KEY_HERE') {
-        return { reply: "I'm not configured yet. Please add a Gemini API key.", movies: [] };
+        throw new Error('Gemini API key not configured');
     }
 
-    // Build conversation contents for Gemini
-    const contents = [];
-
-    // Add conversation history (keep only last 6 messages to save tokens)
-    const recentHistory = history.slice(-6);
-    for (const msg of recentHistory) {
-        contents.push({
-            role: msg.role === 'user' ? 'user' : 'model',
-            parts: [{ text: msg.text }],
-        });
-    }
-
-    // Add the new user message
-    contents.push({
-        role: 'user',
-        parts: [{ text: userMessage }],
-    });
+    const contents = [
+        { role: 'user', parts: [{ text: SYSTEM_PROMPT }] },
+        ...history.map(m => ({
+            role: m.role === 'user' ? 'user' : 'model',
+            parts: [{ text: m.text }]
+        })),
+        { role: 'user', parts: [{ text: userMessage }] }
+    ];
 
     try {
-        const data = await callGemini(contents);
-        const parts = data.candidates?.[0]?.content?.parts || [];
+        // Attempt Gemini with Search Grounding
+        const data = await callGemini(contents, true);
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        
+        // Extract JSON array
+        const jsonMatch = text.match(/\[[\s\S]*\]/);
+        const recs = jsonMatch ? JSON.parse(jsonMatch[0]) : [];
+        const cleanText = text.replace(/\[[\s\S]*\]/, '').trim();
 
-        // Combine all text parts
-        let fullText = parts
-            .filter(p => p.text)
-            .map(p => p.text)
-            .join('');
-
-        if (!fullText) {
-            return { reply: "Sorry, I couldn't come up with a response. Try asking differently! 🎬", movies: [] };
-        }
-
-        // Extract movie JSON from response (if any)
-        const jsonMatch = fullText.match(/```json\s*(\[[\s\S]*?\])\s*```/);
-        let movieRecs = [];
-
-        if (jsonMatch) {
-            try {
-                movieRecs = JSON.parse(jsonMatch[1]);
-            } catch {
-                // If JSON parse fails, try a looser match
-                const looseMatch = fullText.match(/\[[\s\S]*?\]/);
-                if (looseMatch) {
-                    try { movieRecs = JSON.parse(looseMatch[0]); } catch { /* ignore */ }
-                }
-            }
-
-            // Remove the JSON block from the display text
-            fullText = fullText.replace(/```json\s*\[[\s\S]*?\]\s*```/, '').trim();
-        } else {
-            // Try to find a bare JSON array
-            const bareMatch = fullText.match(/\[\s*\{\s*"title"[\s\S]*?\}\s*\]/);
-            if (bareMatch) {
-                try {
-                    movieRecs = JSON.parse(bareMatch[0]);
-                    fullText = fullText.replace(bareMatch[0], '').trim();
-                } catch { /* ignore */ }
-            }
-        }
-
-        // Clean up any remaining markdown artifacts
-        fullText = fullText.replace(/```\s*```/g, '').trim();
-
-        // Resolve movies via TMDB
-        let movies = [];
-        if (movieRecs.length > 0) {
-            movies = await resolveMoviesFromTMDB(movieRecs);
-        }
-
-        return { reply: fullText || "Here are my recommendations! 🎥", movies };
+        return {
+            text: cleanText,
+            recommendations: recs
+        };
     } catch (err) {
-        const isNetworkError = err instanceof TypeError || (err.message && (err.message.includes('NetworkError') || err.message.includes('Failed to fetch')));
-        if (!isNetworkError) {
-          console.error('Chatbot error:', err);
-        }
-        return { reply: "Oops, I'm having trouble connecting to my brain right now. Please check your internet! 🎬", movies: [] };
+        console.error('Chatbot error:', err);
+        throw err;
     }
 };
 
 /**
- * Call Gemini API. Tries with Google Search grounding first,
- * falls back to plain Gemini if rate-limited (429).
- * Retries once with a delay on rate-limit errors.
+ * Internal helper to call Gemini API
  */
-const callGemini = async (contents, useSearch = true, retryCount = 0) => {
+const callGemini = async (contents, useSearch = false, retryCount = 0) => {
     const body = {
-        system_instruction: {
-            parts: [{ text: SYSTEM_PROMPT }],
-        },
         contents,
         generationConfig: {
             temperature: GEMINI_TEMPERATURE,
             maxOutputTokens: 1024,
-        },
+        }
     };
 
+    // Add Google Search grounding if requested
     if (useSearch) {
-        body.tools = [{ google_search: {} }];
+        body.tools = [{ googleSearchRetrieval: {} }];
     }
 
     const response = await fetch(GEMINI_URL, {
@@ -170,24 +104,25 @@ const callGemini = async (contents, useSearch = true, retryCount = 0) => {
 /**
  * Resolve movie titles via TMDB search to get posters, ratings, IDs.
  */
-const resolveMoviesFromTMDB = async (recs) => {
+export const resolveMovieTitles = async (recs) => {
+    if (!recs || recs.length === 0) return [];
+
     const resolved = await Promise.all(
-        recs.slice(0, 8).map(async (rec) => {
+        recs.slice(0, 6).map(async (rec) => {
             try {
-                const query = encodeURIComponent(rec.title);
-                const yearParam = rec.year ? `&year=${rec.year}` : '';
-                const data = await fetchWithCache(
-                    `https://api.themoviedb.org/3/search/movie?query=${query}${yearParam}&page=1`,
-                    TMDB_OPTIONS
-                );
+                const data = await tmdbFetch('/search/movie', {
+                    query: rec.title,
+                    year: rec.year || '',
+                    page: '1'
+                });
                 const movie = data.results?.[0] || null;
 
-                return movie ? {
-                    ...movie,
-                    _reason: rec.reason || '',
-                } : null;
-            } catch {
-                return null;
+                return {
+                    ...rec,
+                    movie, // full TMDB movie object (or null)
+                };
+            } catch (err) {
+                return { ...rec, movie: null };
             }
         })
     );
