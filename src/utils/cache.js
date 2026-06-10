@@ -15,6 +15,7 @@ export const fetchWithCache = async (url, options = {}, ttl = 300000) => {
   }
 
   // Fallback logic for TMDB: try different hostname if first one fails
+  const isTMDB = url.includes('themoviedb.org') || url.includes('tmdb.org') || url.includes('/tmdb-proxy');
   let finalUrl = url;
   let finalOptions = { ...options };
 
@@ -34,7 +35,7 @@ export const fetchWithCache = async (url, options = {}, ttl = 300000) => {
     }
     
     // If TMDB returns 401 and we're using a Bearer token, try falling back to api_key param
-    if (response.status === 401 && (finalUrl.includes('themoviedb.org') || finalUrl.includes('tmdb.org')) && finalOptions.headers?.Authorization?.includes('Bearer')) {
+    if (response.status === 401 && isTMDB && finalOptions.headers?.Authorization?.includes('Bearer')) {
       const token = finalOptions.headers.Authorization.split(' ')[1];
       try {
         const payload = JSON.parse(atob(token.split('.')[1]));
