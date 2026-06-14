@@ -192,3 +192,58 @@ Format: [{"title":"Title Name","year":"2020"},{"title":"Another One","year":"199
         return [];
     }
 };
+
+/**
+ * Get quick smart suggestions for search dropdown.
+ */
+export const getSmartSuggestions = async (query) => {
+    if (!GEMINI_API_KEY || GEMINI_API_KEY === 'YOUR_GEMINI_API_KEY_HERE' || !query?.trim()) return [];
+
+    const cacheKey = `suggest:${query.trim().toLowerCase()}`;
+    if (aiCache.has(cacheKey)) return aiCache.get(cacheKey);
+
+    // Step 1: Try a quick TMDB prefix search first for high accuracy
+    try {
+        const tmdbData = await tmdbFetch('/search/multi', { query: query.trim(), page: '1' });
+        const tmdbResults = tmdbData.results?.filter(r => r.media_type !== 'person').slice(0, 4) || [];
+        
+        // If we have strong prefix matches, return them immediately
+        if (tmdbResults.length > 0 && (tmdbResults[0].title || tmdbResults[0].name).toLowerCase().startsWith(query.toLowerCase().slice(0, 3))) {
+            aiCache.set(cacheKey, tmdbResults);
+            return tmdbResults;
+        }
+    } catch (e) { /* ignore */ }
+
+    // Step 2: Use AI for fuzzy/smart correction (e.g. "spidddermannn")
+    const prompt = `User typed a search query: "${query}". 
+If this looks like a typo or misspelled movie/TV title, identify the correct intended title.
+Recommend exactly 4 real, popular movie or TV show titles that are either exact matches or highly relevant corrections.
+Respond ONLY with a valid JSON array of strings (the titles).
+Example: ["Inception", "Interstellar", "The Dark Knight", "The Prestige"]`;
+
+    try {
+        const response = await fetch(`${import.meta.env.VITE_GEMINI_URL}?key=${GEMINI_API_KEY}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: { temperature: 0.1 } // Keep it deterministic
+            }),
+        });
+
+        const data = await response.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '[]';
+        const titles = JSON.parse(text.match(/\[.*\]/)?.[0] || '[]');
+
+        const results = await Promise.all(titles.slice(0, 4).map(async (t) => {
+            const data = await tmdbFetch('/search/multi', { query: t, page: '1' });
+            return data.results?.filter(r => r.media_type !== 'person')[0];
+        }));
+
+        const final = results.filter(Boolean);
+        aiCache.set(cacheKey, final);
+        return final;
+    } catch (e) {
+        return [];
+    }
+};

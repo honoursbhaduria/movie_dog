@@ -1,4 +1,4 @@
-import { Client, Databases, ID, Query } from 'appwrite'
+import { Client, Databases, Account, ID, Query } from 'appwrite'
 
 const PROJECT_ID = import.meta.env.VITE_APPWRITE_PROJECT_ID;
 const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID;
@@ -9,6 +9,7 @@ const isAppwriteConfigured = PROJECT_ID && DATABASE_ID && COLLECTION_ID;
 
 let client = null;
 let database = null;
+let account = null;
 
 if (isAppwriteConfigured) {
   client = new Client()
@@ -16,7 +17,10 @@ if (isAppwriteConfigured) {
     .setProject(PROJECT_ID);
   
   database = new Databases(client);
+  account = new Account(client);
 }
+
+export { account };
 
 export const updateSearchCount = async (searchTerm, movie) => {
   if (!isAppwriteConfigured) return;

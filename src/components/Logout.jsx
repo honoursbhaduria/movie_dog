@@ -3,17 +3,17 @@ import { useNavigate } from 'react-router-dom';
 import { logout } from '../utils/auth';
 
 const Logout = () => {
-    const navigate = useNavigate();
+ const navigate = useNavigate();
 
-    useEffect(() => {
-        const doLogout = async () => {
-            await logout();
-            navigate('/', { replace: true });
-        };
-        doLogout();
-    }, [navigate]);
+ useEffect(() => {
+  const doLogout = async () => {
+   await logout();
+   navigate('/', { replace: true });
+  };
+  doLogout();
+ }, [navigate]);
 
-    return null;
+ return null;
 };
 
 export default Logout;

@@ -10,7 +10,7 @@ export const getTMDBImageUrl = (path, size = 'w500') => {
   // If the path is already a full URL, return it
   if (path.startsWith('http')) return path;
 
-  const base = window.location.hostname === 'localhost' 
+  const base = ['localhost', '127.0.0.1', '0.0.0.0'].includes(window.location.hostname) 
     ? '/tmdb-image-proxy' 
     : 'https://image.tmdb.org';
     

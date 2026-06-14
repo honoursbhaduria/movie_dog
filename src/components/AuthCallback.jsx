@@ -8,65 +8,65 @@ import { getSupabase } from '../utils/auth';
  * before redirecting to home.
  */
 const AuthCallback = () => {
-    const navigate = useNavigate();
+ const navigate = useNavigate();
 
-    useEffect(() => {
-        const supabase = getSupabase();
+ useEffect(() => {
+  const supabase = getSupabase();
 
-        if (!supabase) {
-            navigate('/', { replace: true });
-            return;
-        }
+  if (!supabase) {
+   navigate('/', { replace: true });
+   return;
+  }
 
-        let cleaned = false;
+  let cleaned = false;
 
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-            (event, session) => {
-                if (!cleaned && session) {
-                    cleaned = true;
-                    subscription.unsubscribe();
-                    navigate('/', { replace: true });
-                }
-            }
-        );
+  const { data: { subscription } } = supabase.auth.onAuthStateChange(
+   (event, session) => {
+    if (!cleaned && session) {
+     cleaned = true;
+     subscription.unsubscribe();
+     navigate('/', { replace: true });
+    }
+   }
+  );
 
-        // Also check if session already exists
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            if (!cleaned && session) {
-                cleaned = true;
-                subscription.unsubscribe();
-                navigate('/', { replace: true });
-            }
-        });
+  // Also check if session already exists
+  supabase.auth.getSession().then(({ data: { session } }) => {
+   if (!cleaned && session) {
+    cleaned = true;
+    subscription.unsubscribe();
+    navigate('/', { replace: true });
+   }
+  });
 
-        // Fallback: redirect after 5s if something goes wrong
-        const timeout = setTimeout(() => {
-            if (!cleaned) {
-                cleaned = true;
-                subscription.unsubscribe();
-                navigate('/login', { replace: true });
-            }
-        }, 5000);
+  // Fallback: redirect after 5s if something goes wrong
+  const timeout = setTimeout(() => {
+   if (!cleaned) {
+    cleaned = true;
+    subscription.unsubscribe();
+    navigate('/login', { replace: true });
+   }
+  }, 5000);
 
-        return () => {
-            cleaned = true;
-            clearTimeout(timeout);
-            subscription.unsubscribe();
-        };
-    }, [navigate]);
+  return () => {
+   cleaned = true;
+   clearTimeout(timeout);
+   subscription.unsubscribe();
+  };
+ }, [navigate]);
 
-    return (
-        <main className="auth-page">
-            <div className="auth-pattern" />
-            <div className="auth-callback-container">
-                <div className="auth-callback-card">
-                    <span className="auth-btn-loader auth-callback-spinner" />
-                    <h2>Signing you in…</h2>
-                    <p>Please wait while we complete authentication.</p>
-                </div>
-            </div>
-        </main>
-    );
+ return (
+  <main className="auth-page">
+   <div className="auth-pattern" />
+   <div className="auth-callback-container">
+    <div className="auth-callback-card">
+     <span className="auth-btn-loader auth-callback-spinner" />
+     <h2>Signing you in…</h2>
+     <p>Please wait while we complete authentication.</p>
+    </div>
+   </div>
+  </main>
+ );
 };
 
 export default AuthCallback;

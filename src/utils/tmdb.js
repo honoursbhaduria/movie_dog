@@ -1,6 +1,7 @@
 /**
  * TMDB API Configuration & Helpers
  */
+import { fetchWithCache } from './cache';
 
 const RAW_API_KEY = import.meta.env.VITE_TMDB_API_KEY;
 
@@ -9,7 +10,10 @@ const FALLBACK_KEY = '7f6c06992de67834019b920fc5f704a1';
 const isValidKey = (key) => key && key !== 'your_tmdb_api_key_here' && key.length > 10;
 
 export const TMDB_API_KEY = isValidKey(RAW_API_KEY) ? RAW_API_KEY : FALLBACK_KEY;
-export const TMDB_BASE_URL = window.location.hostname === 'localhost' ? '/tmdb-proxy' : 'https://api.tmdb.org/3';
+
+// Robust proxy detection for local development
+const isLocal = ['localhost', '127.0.0.1', '0.0.0.0'].includes(window.location.hostname);
+export const TMDB_BASE_URL = isLocal ? '/tmdb-proxy' : 'https://api.tmdb.org/3';
 
 const isBearer = TMDB_API_KEY && TMDB_API_KEY.length > 50;
 
@@ -34,8 +38,6 @@ export const getTMDBOptions = () => {
 /**
  * Standardized TMDB fetch with cache and auto-auth
  */
-import { fetchWithCache } from './cache';
-
 export const tmdbFetch = async (endpoint, params = {}) => {
   const urlParams = new URLSearchParams(params);
   
@@ -45,10 +47,12 @@ export const tmdbFetch = async (endpoint, params = {}) => {
   }
 
   const queryString = urlParams.toString();
-  const url = `${TMDB_BASE_URL}${endpoint}${endpoint.includes('?') ? '&' : '?'}${queryString}`;
+  // Ensure endpoint starts with / and no double slashes when combining
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  const url = `${TMDB_BASE_URL}${cleanEndpoint}${cleanEndpoint.includes('?') ? '&' : '?'}${queryString}`;
   
   // Clean up any double symbols
-  const finalUrl = url.replace('??', '?').replace('&&', '&');
+  const finalUrl = url.replace(/\?\?/g, '?').replace(/&&/g, '&');
 
   try {
     return await fetchWithCache(finalUrl, getTMDBOptions());

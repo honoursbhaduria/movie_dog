@@ -7,18 +7,24 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "server": "node server/index.js"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.95.3",
     "@tailwindcss/vite": "^4.1.18",
     "appwrite": "^22.3.0",
+    "framer-motion": "^12.40.0",
+    "fuse.js": "^7.4.2",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-router-dom": "^6.18.0",
     "react-use": "^17.6.0",
-    "tailwindcss": "^4.1.18"
+    "socket.io": "^4.8.3",
+    "socket.io-client": "^4.8.3",
+    "tailwindcss": "^4.1.18",
+    "uuid": "^14.0.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",
