@@ -279,45 +279,44 @@ const App = () => {
   <Sidebar onWishlistToggle={() => setShowWishlist(prev => !prev)} />
   
   {/* Global Pro Search Toggle */}
-  <div className="fixed top-8 right-12 z-[300]">
-   <div className={`flex items-center bg-white/[0.03] border border-white/10 rounded-full transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] backdrop-blur-md ${isSearchOpen ? 'w-[450px]' : 'w-14'}`}>
-    <div className={`flex-1 overflow-hidden transition-all duration-700 ${isSearchOpen ? 'opacity-100 pl-8' : 'w-0 opacity-0'}`}>
-     <input
-      ref={searchInputRef}
-      type="text"
-      placeholder="Search titles, actors, genres..."
-      value={searchTerm}
-      onChange={(e) => setSearchTerm(e.target.value)}
-      onKeyDown={(e) => e.key === 'Enter' && resultsRef.current?.scrollIntoView({ behavior: 'smooth' })}
-      className="bg-transparent outline-none text-white text-[11px] font-black uppercase tracking-[0.4em] w-full placeholder:text-white/10"
-     />
-    </div>
-    
-    <button 
-     onClick={() => {
-      setIsSearchOpen(!isSearchOpen);
-      if (!isSearchOpen) setTimeout(() => searchInputRef.current?.focus(), 100);
-     }}
-     className={`w-14 h-14 flex items-center justify-center transition-all duration-500 rounded-full hover:bg-white/10 active:scale-90 flex-shrink-0`}
-    >
-     {isSearchOpen ? (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeOpacity="0.6" strokeWidth="3.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
-     ) : (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeOpacity="0.4" strokeWidth="3"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-     )}
-    </button>
+  <div className="fixed top-8 right-12 z-[300] flex flex-col items-end gap-4">
+  <div className="flex items-center gap-4">
+   <div className={`flex items-center gap-4 bg-white/5 border border-white/10 px-8 py-4 transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] overflow-hidden ${isSearchOpen ? 'w-[450px] opacity-100 ' : 'w-0 opacity-0 !p-0 '}`}>
+   <input
+    ref={searchInputRef}
+    type="text"
+    placeholder="Search titles, actors, genres..."
+    value={searchTerm}
+    onChange={(e) => setSearchTerm(e.target.value)}
+    onKeyDown={(e) => e.key === 'Enter' && resultsRef.current?.scrollIntoView({ behavior: 'smooth' })}
+    className="bg-transparent outline-none text-white text-[11px] font-black uppercase tracking-[0.4em] w-full placeholder:text-white/10"
+   />
    </div>
+   
+   <button 
+   onClick={() => {
+    setIsSearchOpen(!isSearchOpen);
+    if (!isSearchOpen) setTimeout(() => searchInputRef.current?.focus(), 100);
+   }}
+   className={`w-16 h-14 flex items-center justify-center transition-all duration-500 hover:scale-110 active:scale-90 ${isSearchOpen ? 'bg-white ' : 'bg-white/5 border border-white/10 hover:bg-white/10'}`}
+   >
+   {isSearchOpen ? (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="3.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+   ) : (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+   )}
+   </button>
   </div>
 
   {/* Smart Suggestions Dropdown */}
   {isSearchOpen && (suggestions.length > 0 || isSuggesting) && (
-   <div className="fixed top-[88px] right-12 w-[450px] bg-white/5 border border-white/10 backdrop-blur-xl z-[300]">
-   <div className="flex flex-col">
+   <div className="w-[450px] mr-[80px] bg-white/5 border border-white/10 border border-white/5">
+   <div className="flex flex-col gap-4">
     {suggestions.map((s) => (
     <div 
      key={s.id} 
      onClick={() => { handleMovieClick(s.id, s.media_type || 'movie'); setIsSearchOpen(false); }}
-     className="group flex items-center gap-4 p-4 hover:bg-white/5 cursor-pointer transition-all border-b border-white/5 last:border-0"
+     className="group flex items-center gap-4 p-3 hover:bg-white/5 cursor-pointer transition-all border border-transparent hover:border-white/5"
     >
      <img src={getTMDBImageUrl(s.poster_path, 'w92')} className="w-10 h-14 object-cover group-hover:scale-110 transition-transform" alt="" />
      <div className="flex-1 min-w-0">
@@ -332,6 +331,7 @@ const App = () => {
    </div>
    </div>
   )}
+  </div>
 
   <div className="main-content relative z-10">
   <Hero 
@@ -444,12 +444,12 @@ const App = () => {
   )}
   
   <button 
-   className="fixed bottom-8 right-8 w-14 h-14 flex items-center justify-center z-50 transition-all duration-500 hover:scale-110 active:scale-90 group rounded-full" 
+   className="fixed bottom-8 right-8 w-14 h-14 flex items-center justify-center z-50 transition-all duration-500 hover:scale-110 active:scale-90 group" 
    onClick={handleChatbotClick} 
    title="Chat with AI"
   >
     {/* Minimalist Glass Background */}
-    <div className="absolute inset-0 bg-white/5 backdrop-blur-md border border-white/10 group-hover:bg-white/10 transition-colors rounded-full" />
+    <div className="absolute inset-0 bg-white/5 backdrop-blur-md border border-white/10 group-hover:bg-white/10 transition-colors" />
 
     {/* Yelp Icon */}
     <svg width="28" height="28" viewBox="0 0 32 32" className="relative z-10 transition-transform duration-500 group-hover:rotate-12" fill="#FFFFFF">

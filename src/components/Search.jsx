@@ -41,7 +41,7 @@ const Search = ({
   </div>
 
   <div className="px-12 md:px-32 relative">
-  <div className="absolute left-16 md:left-36 top-1/2 -translate-y-1/2 text-white/10 pointer-events-none">
+  <div className="absolute left-16 md:left-36 top-1/2 -translate-y-1/2 text-white/20">
    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
   </div>
   <input

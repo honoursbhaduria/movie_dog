@@ -48,7 +48,7 @@ const MovieCard = memo(({ movie, onClick }) => {
   {/* Favorite Toggle (Plus Icon) */}
   <button 
    onClick={handleWishlistToggle}
-   className={`absolute top-6 right-6 z-40 w-12 h-12 backdrop-blur-3xl transition-all duration-500 flex items-center justify-center opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 ${inWishlist ? 'bg-white text-black' : 'bg-black/40 text-white hover:bg-white/20'}`}
+   className={`absolute top-6 right-6 z-40 w-12 h-12 backdrop-blur-3xl border border-white/10 transition-all duration-500 flex items-center justify-center opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 ${inWishlist ? 'bg-white text-black' : 'bg-black/40 text-white hover:bg-white/20'}`}
   >
    <svg 
    width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" 
@@ -60,7 +60,7 @@ const MovieCard = memo(({ movie, onClick }) => {
 
   {/* Play Icon on Hover */}
   <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center">
-   <div className="w-20 h-20 bg-white/10 backdrop-blur-md flex items-center justify-center scale-75 group-hover:scale-100 transition-transform duration-500">
+   <div className="w-20 h-20 bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center scale-75 group-hover:scale-100 transition-transform duration-500">
     <svg width="40" height="40" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg>
    </div>
   </div>
