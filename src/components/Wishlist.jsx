@@ -84,10 +84,10 @@ const Wishlist = ({ onMovieClick, onClose }) => {
     {wishlist.map((movie) => (
     <div 
      key={movie.id} 
-     className="group relative flex items-center gap-4 bg-white/5 border border-white/5 p-3 hover:bg-white/10 transition-all duration-300 cursor-pointer"
+     className="group relative flex items-center gap-4 bg-white/5 p-3 hover:bg-white/10 transition-all duration-300 cursor-pointer"
      onClick={() => onMovieClick(movie.id, movie.media_type)}
     >
-     <div className="w-16 h-24 overflow-hidden bg-black/50 shrink-0 border border-white/5">
+     <div className="w-16 h-24 overflow-hidden bg-black/50 shrink-0">
      {movie.poster_path ? (
       <img
       src={getTMDBImageUrl(movie.poster_path, 'w185')}
@@ -101,7 +101,7 @@ const Wishlist = ({ onMovieClick, onClose }) => {
      <div className="flex-1 min-w-0">
      <h4 className="text-white font-bold text-sm truncate group-hover:text-accent transition-colors">{movie.title || movie.name}</h4>
      <div className="flex items-center gap-3 mt-1.5">
-      <span className="text-[10px] text-gray-400 font-bold border border-white/10 px-2 py-0.5 ">
+      <span className="text-[10px] text-gray-400 font-bold px-2 py-0.5 ">
       {(movie.release_date || movie.first_air_date || '????').split('-')[0]}
       </span>
       <span className="flex items-center gap-1 text-[10px] text-yellow-500 font-black">

@@ -242,7 +242,7 @@ const MovieDetails = () => {
      <div 
       key={ep.id}
       onClick={() => navigate(`/player/tv/${movieId}/${selectedSeason}/${ep.episode_number}`)}
-      className="flex gap-6 group cursor-pointer p-4 hover:bg-white/5 transition-all border border-transparent hover:border-white/5"
+      className="flex gap-6 group cursor-pointer p-4 hover:bg-white/5 transition-all"
      >
       <div className="w-28 h-20 overflow-hidden shrink-0 relative">
       <img src={getTMDBImageUrl(ep.still_path || details.backdrop_path, 'w200')} className="w-full h-full object-cover group-hover:scale-110 transition-all duration-700" alt="" />
@@ -267,7 +267,7 @@ const MovieDetails = () => {
       <div 
       key={m.id}
       onClick={() => navigate(`/details/movie/${m.id}`)}
-      className="flex gap-6 group cursor-pointer p-4 hover:bg-white/5 transition-all border border-transparent hover:border-white/5"
+      className="flex gap-6 group cursor-pointer p-4 hover:bg-white/5 transition-all"
       >
       <div className="w-24 h-32 overflow-hidden shrink-0 relative">
        <img src={getTMDBImageUrl(m.poster_path, 'w200')} className="w-full h-full object-cover group-hover:scale-110 transition-all duration-700" alt="" />

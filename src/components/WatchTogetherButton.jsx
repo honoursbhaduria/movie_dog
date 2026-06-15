@@ -20,18 +20,17 @@ const WatchTogetherButton = ({ movieId, type }) => {
   {/* ── Trigger Button ── */}
   <button
   onClick={() => setIsOpen(true)}
-  className="bg-white/5 border border-white/10 flex items-center gap-2.5 px-5 py-2.5 text-sm font-semibold text-white/90 transition-all duration-300 hover:scale-[1.04] hover: hover: active:scale-95 cursor-pointer"
+  className="px-12 py-6 bg-white/5 border border-white/10 text-white font-black hover:bg-white/10 transition-all uppercase tracking-widest text-[11px] flex items-center gap-4 group"
   >
   {/* Cinema / Users icon with pulse */}
   <span className="relative flex items-center justify-center">
-   <span className="absolute inset-0 bg-white/10 animate-pulse" />
    <svg
    xmlns="http://www.w3.org/2000/svg"
-   className="relative w-[18px] h-[18px] text-white/90"
+   className="relative w-[18px] h-[18px] text-white group-hover:scale-110 transition-transform"
    fill="none"
    viewBox="0 0 24 24"
    stroke="currentColor"
-   strokeWidth={1.8}
+   strokeWidth={3}
    >
    <path
     strokeLinecap="round"
