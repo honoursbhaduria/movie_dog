@@ -357,7 +357,7 @@ const App = () => {
    />
   </div>
 
-  <section className="movie-grid px-12 md:px-32">
+  <section className="movie-grid px-6 md:px-16">
    {isLoading ? (
    <div className="col-span-full flex justify-center py-20"><Spinner /></div>
    ) : movieList.slice(0, 12).map((movie) => (
@@ -377,7 +377,7 @@ const App = () => {
    />
   )}
 
-  <section className="movie-grid px-12 md:px-32 mt-20">
+  <section className="movie-grid px-6 md:px-16 mt-20">
    {!isLoading && movieList.slice(13).map((movie) => (
    <MovieCard 
     key={movie.id} 
@@ -388,7 +388,7 @@ const App = () => {
   </section>
 
   {currentPage < totalPages && (
-   <div className="flex justify-center mb-20 px-12 md:px-32">
+   <div className="flex justify-center mb-20 px-6 md:px-16">
    <button 
     onClick={loadMoreContent} 
     disabled={isLoadingMore} 
