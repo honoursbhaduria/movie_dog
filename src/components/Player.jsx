@@ -303,7 +303,6 @@ const Player = () => {
               referrerPolicy="no-referrer-when-downgrade"
               className="w-full h-full"
               onLoad={handleIframeLoad}
-              sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-presentation"
             />
           </div>
 
